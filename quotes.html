@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Zitate-Datenbank</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    input, textarea, button { margin: 0.5em 0; display: block; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>Zitate-Datenbank</h1>
+
+  <button onclick="loadDatabase()">📂 Datenbank öffnen</button>
+  <button onclick="saveDatabase()">💾 Datenbank speichern</button>
+
+  <h2>🔍 Zitate suchen</h2>
+  <input type="text" id="searchInput" placeholder="Suchbegriff..." oninput="searchQuotes()">
+
+  <h2>➕ Neues Zitat hinzufügen</h2>
+  <textarea id="quoteText" placeholder="Zitattext"></textarea>
+  <input type="text" id="quoteSource" placeholder="Quelle">
+  <input type="text" id="quoteTag" placeholder="Tag (optional)">
+  <button onclick="addQuote()">Zitat speichern</button>
+
+  <table id="resultsTable">
+    <thead>
+      <tr><th>Zitat</th><th>Quelle</th><th>Tag</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let db;
+    let fileHandle;
+
+    async function loadDatabase() {
+      fileHandle = await window.showOpenFilePicker({
+        types: [{ description: 'SQLite DB', accept: { 'application/octet-stream': ['.sqlite'] } }]
+      }).then(handles => handles[0]);
+
+      const file = await fileHandle.getFile();
+      const buffer = await file.arrayBuffer();
+      const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+      db = new SQL.Database(new Uint8Array(buffer));
+
+      // Tabelle erstellen, falls nicht vorhanden
+      db.run(`CREATE TABLE IF NOT EXISTS quotes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        text TEXT NOT NULL,
+        source TEXT NOT NULL,
+        tag TEXT
+      )`);
+
+      searchQuotes();
+    }
+
+    function searchQuotes() {
+      if (!db) return;
+      const term = document.getElementById('searchInput').value;
+      const stmt = db.prepare(`SELECT text, source, tag FROM quotes WHERE text LIKE ? OR source LIKE ? OR tag LIKE ?`);
+      stmt.bind([`%${term}%`, `%${term}%`, `%${term}%`]);
+
+      const tbody = document.querySelector('#resultsTable tbody');
+      tbody.innerHTML = '';
+      while (stmt.step()) {
+        const [text, source, tag] = stmt.get();
+        const row = `<tr><td>${text}</td><td>${source}</td><td>${tag || ''}</td></tr>`;
+        tbody.innerHTML += row;
+      }
+      stmt.free();
+    }
+
+    function addQuote() {
+      if (!db) return;
+      const text = document.getElementById('quoteText').value.trim();
+      const source = document.getElementById('quoteSource').value.trim();
+      const tag = document.getElementById('quoteTag').value.trim();
+
+      if (!text || !source) {
+        alert("Zitat und Quelle sind erforderlich.");
+        return;
+      }
+
+      db.run(`INSERT INTO quotes (text, source, tag) VALUES (?, ?, ?)`, [text, source, tag || null]);
+      document.getElementById('quoteText').value = '';
+      document.getElementById('quoteSource').value = '';
+      document.getElementById('quoteTag').value = '';
+      searchQuotes();
+      saveDatabase();
+    }
+
+    async function saveDatabase() {
+      if (!db || !fileHandle) return;
+      const writable = await fileHandle.createWritable();
+      const buffer = db.export();
+      await writable.write(buffer);
+      await writable.close();
+      alert("Datenbank gespeichert.");
+    }
+  </script>
+</body>
+</html>
