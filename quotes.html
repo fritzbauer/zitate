@@ -1,106 +1,738 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Zitate-Datenbank</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 2em; }
-    input, textarea, button { margin: 0.5em 0; display: block; width: 100%; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-    th, td { border: 1px solid #ccc; padding: 0.5em; }
+    :root{
+      --bg: #0f1221;
+      --card: #171a2b;
+      --muted: #8ea0b8;
+      --text: #e8eefc;
+      --accent: #6ea8fe;
+      --accent-2:#8f7cff;
+      --danger:#ff6b6b;
+      --ok:#2ecc71;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 12px;
+    }
+    html, body { height: 100%; background: radial-gradient(1200px 800px at 20% -10%, #1a1f3d 0%, #0b0e1a 60%, #070914 100%); }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 0; color: var(--text); }
+
+    .app {
+      max-width: 1100px; margin: 24px auto; padding: 0 16px 80px;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(180deg, rgba(11,14,26,0.85), rgba(11,14,26,0.55) 70%, rgba(11,14,26,0));
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner { display:flex; align-items:center; gap:12px; padding:12px 16px; max-width:1100px; margin:0 auto; }
+    .brand { font-weight: 700; letter-spacing: .3px; font-size: 18px; margin-right: auto; }
+
+    /* Buttons & inputs */
+    .btn{
+      display:inline-flex; align-items:center; gap:.5rem;
+      background: linear-gradient(180deg, #29304f, #1b213c);
+      color: var(--text); border:1px solid var(--border); border-radius: 10px;
+      padding:10px 14px; cursor:pointer; box-shadow: var(--shadow);
+      transition:.15s transform ease, .15s filter ease, .15s background ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .btn:active{ transform: translateY(0); filter: brightness(.98); }
+    .btn.primary{ background: linear-gradient(180deg, var(--accent), #3a6df0); color:#0b0e1a; font-weight: 700; }
+    .btn.danger{ background: linear-gradient(180deg, #ff7777, #f95757); color:#0b0e1a; font-weight: 700; }
+    .btn.ghost{ background: transparent; border-color: var(--border); }
+
+    .toolbar { display:flex; flex-wrap: wrap; gap: 10px; align-items:center; }
+    .toolbar .spacer { flex: 1; }
+
+    .card { background: linear-gradient(180deg, #171a2b, #14182a); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+
+    .section-title { margin: 18px 0 8px; font-size: 18px; font-weight: 700; color: #c7d6ff; }
+
+    .grid { display:grid; gap:12px; }
+    .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .grid.cols-1 { grid-template-columns: 1fr; }
+    @media (max-width: 800px){ .grid.cols-2 { grid-template-columns: 1fr; } }
+
+    label { font-size: 12px; color: var(--muted); display:block; margin-bottom:6px; letter-spacing:.2px; }
+    input[type="text"], textarea, select {
+      width: 100%; box-sizing: border-box; color: var(--text);
+      background: #0f1324; border:1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; outline: none; transition: .15s border ease, .15s box-shadow ease;
+      box-shadow: inset 0 0 0 1px transparent, 0 8px 18px rgba(0,0,0,0.25);
+    }
+    input::placeholder, textarea::placeholder { color: #6f7c97; }
+    input:focus, textarea:focus, select:focus { border-color: #5f86ff; box-shadow: 0 0 0 4px rgba(94, 134, 255, .15); }
+    textarea { resize: vertical; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align:left; font-size: 12px; color: var(--muted); font-weight: 700;
+      border-bottom: 1px solid var(--border); padding: 10px; position: sticky; top: 0;
+      background: #14182a;
+    }
+    tbody td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .col-actions { width: 1%; white-space: nowrap; }
+    .truncate { display:-webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .muted { color: var(--muted); font-size: 12px; }
+
+    .pagination { display:flex; align-items:center; gap:10px; }
+    .pill { padding:6px 10px; border:1px solid var(--border); border-radius: 999px; }
+
+    .counter { font-size: 12px; color: var(--muted); }
+
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
   </style>
 </head>
 <body>
-  <h1>Zitate-Datenbank</h1>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">🗂️ Zitate‑Datenbank</div>
+      <button class="btn" id="openBtn">📂&nbsp;Datenbank öffnen</button>
+      <button class="btn" id="saveBtn">💾&nbsp;Speichern</button>
+    </div>
+  </div>
 
-  <button onclick="loadDatabase()">📂 Datenbank öffnen</button>
-  <button onclick="saveDatabase()">💾 Datenbank speichern</button>
+  <div class="app">
+    <!-- Suche -->
+    <div class="card" style="margin-top:12px;">
+      <div class="toolbar">
+        <div style="flex:1; min-width:220px;">
+          <label for="searchInput">🔍 Zitate suchen</label>
+          <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
+          <div class="hint">Ergebnisse sind paginiert. Markierungen bleiben beim Blättern erhalten.</div>
+        </div>
+        <div>
+          <label for="pageSize">Treffer pro Seite</label>
+          <select id="pageSize">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <div class="counter"><span id="totalCount">0</span> Treffer • Markiert: <span id="selectedCount">0</span></div>
+        <button class="btn" id="selectPageBtn">Seite markieren</button>
+        <button class="btn ghost" id="clearPageBtn">Seitenmarkierung aufheben</button>
+        <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Markierte als RTF kopieren</button>
+        <button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>
+      </div>
+    </div>
 
-  <h2>🔍 Zitate suchen</h2>
-  <input type="text" id="searchInput" placeholder="Suchbegriff..." oninput="searchQuotes()">
+    <!-- Ergebnisse -->
+    <div class="card" style="margin-top:12px;">
+      <div style="overflow:auto; max-height: 55vh;">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th style="width:42px;"><input type="checkbox" id="selectAllCheckbox" /></th>
+              <th>Titel</th>
+              <th>Quelle</th>
+              <th>Zitat</th>
+              <th>Genutzt</th>
+              <th class="col-actions">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px;">
+        <div class="pagination">
+          <button class="btn ghost" id="prevPageBtn">◀</button>
+          <span class="pill">Seite <span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+          <button class="btn ghost" id="nextPageBtn">▶</button>
+        </div>
+        <div class="muted" id="pageInfo"></div>
+      </div>
+    </div>
 
-  <h2>➕ Neues Zitat hinzufügen</h2>
-  <textarea id="quoteText" placeholder="Zitattext"></textarea>
-  <input type="text" id="quoteSource" placeholder="Quelle">
-  <input type="text" id="quoteTag" placeholder="Tag (optional)">
-  <button onclick="addQuote()">Zitat speichern</button>
-
-  <table id="resultsTable">
-    <thead>
-      <tr><th>Zitat</th><th>Quelle</th><th>Tag</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Neues Zitat -->
+    <div class="card" style="margin-top:12px;">
+      <div class="section-title">➕ Neues Zitat hinzufügen</div>
+      <div class="grid cols-2">
+        <div>
+          <label for="quoteTitle">Titel</label>
+          <input type="text" id="quoteTitle" placeholder="Kurztitel oder Schlagwort" />
+        </div>
+        <div>
+          <label for="quoteSource">Quelle</label>
+          <input type="text" id="quoteSource" placeholder="Autor, Werk, URL, …" />
+        </div>
+      </div>
+      <div class="grid cols-1" style="margin-top:8px;">
+        <div>
+          <label for="quoteText">Zitat (20 Zeilen)</label>
+          <textarea id="quoteText" rows="20" placeholder="„Wortlaut des Zitats …“"></textarea>
+        </div>
+        <div>
+          <label for="quoteUsed">Genutzt (20 Zeilen)</label>
+          <textarea id="quoteUsed" rows="20" placeholder="Kontext, wo/wie verwendet, Notizen …"></textarea>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn primary" id="addQuoteBtn">Zitat speichern</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     let db;
     let fileHandle;
+    let currentPage = 1;
+    let pageSize = 20;
+    let totalResults = 0;
+    let selectedIds = new Set();
+    let lastSearchTerm = "";
 
+    // Small helpers
+    const $ = sel => document.querySelector(sel);
+
+    function debounce(fn, delay = 250) {
+      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+    }
+
+    function escapeHTML(str) {
+      return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // ---- RTF helpers ----
+    // Convert JS string to RTF-safe string with unicode support
+    function rtfEscapeUnicode(str) {
+      const specials = /[\\{}]/g;
+      const escapeSpecials = s => s.replace(specials, m => '\\' + m);
+
+      // iterate code points safely
+      let out = '';
+      for (const ch of Array.from(str ?? '')) {
+        const cp = ch.codePointAt(0);
+        // ASCII range and not special: output as-is
+        if (cp <= 0x7f && !/^[\\{}]$/.test(ch)) { out += ch; continue; }
+        // newline -> RTF line break
+        if (ch === '\n') { out += '\\line '; continue; }
+        // tab
+        if (ch === '\t') { out += '\\tab '; continue; }
+        // For non-BMP, encode surrogate pair as two \u values
+        if (cp > 0xFFFF) {
+          const u = cp - 0x10000;
+          const high = 0xD800 + (u >> 10);
+          const low  = 0xDC00 + (u & 0x3FF);
+          const sHigh = (high <= 32767 ? high : high - 65536);
+          const sLow  = (low  <= 32767 ? low  : low  - 65536);
+          out += `\\u${sHigh}?\\u${sLow}?`;
+        } else {
+          // escape specials as well
+          const esc = escapeSpecials(ch);
+          if (esc !== ch) { out += esc; continue; }
+          const signed = (cp <= 32767 ? cp : cp - 65536);
+          out += `\\u${signed}?`;
+        }
+      }
+      return out;
+    }
+
+    function buildRtf(quotes) {
+      // Simple, readable RTF: Title bold, Source italic (muted), then Quote text and Used notes as paragraphs.
+      const header = '{\\rtf1\\ansi\\deff0\\fs22\\f0 ';
+      const body = quotes.map(q => {
+        const title = rtfEscapeUnicode(q.titel || '');
+        const quelle = rtfEscapeUnicode(q.quelle || '');
+        const zitat = rtfEscapeUnicode(q.zitat || '');
+        const genutzt = rtfEscapeUnicode(q.genutzt || '');
+        const parts = [];
+        if (title) parts.push(`\\b ${title}\\b0\\par`);
+        if (quelle) parts.push(`\\i ${quelle}\\i0\\par`);
+        if (zitat) parts.push(`${zitat}\\par`);
+        if (genutzt) parts.push(`\\cf2 ${genutzt}\\cf0\\par`);
+        // separator:
+        parts.push('\\par');
+        return parts.join('\n');
+      }).join('\n');
+      const footer = '}';
+      return header + body + footer;
+    }
+
+    async function copyRtfToClipboard(rtfString, plainTextFallback) {
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          const blob = new Blob([rtfString], { type: 'text/rtf' });
+          //const plain = ["text/plain"]: rtfString,
+          const item = new ClipboardItem({ 'text/rtf': blob, 'text/plain': new Blob([plainTextFallback], { type: 'text/plain' }) });
+          await navigator.clipboard.write([item]);
+          alert('Markierte Zitate wurden als RTF in die Zwischenablage kopiert.');
+          return;
+        } catch (err) {
+          console.error('RTF failed:', err);
+        }
+      }
+      // Fallback to plain text
+      try {
+        await navigator.clipboard.writeText(plainTextFallback);
+        alert('RTF wird nicht unterstützt. Plain-Text wurde in die Zwischenablage kopiert.');
+      } catch (err) {
+        alert('Kopieren in die Zwischenablage nicht möglich (Berechtigungen?).\nFehler: ' + err);
+        console.error('Clipboard write failed:', err);
+      }
+
+    }
+
+    // ---- DB init & migration ----
     async function loadDatabase() {
-      fileHandle = await window.showOpenFilePicker({
-        types: [{ description: 'SQLite DB', accept: { 'application/octet-stream': ['.sqlite'] } }]
-      }).then(handles => handles[0]);
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{ description: 'SQLite DB', accept: { 'application/octet-stream': ['.sqlite'] } }]
+        });
+        fileHandle = handle;
+        const file = await fileHandle.getFile();
+        const buffer = await file.arrayBuffer();
+        const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+        db = new SQL.Database(new Uint8Array(buffer));
 
-      const file = await fileHandle.getFile();
-      const buffer = await file.arrayBuffer();
-      const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
-      db = new SQL.Database(new Uint8Array(buffer));
+        // Create table if not exists (new schema includes legacy cols for compatibility)
+        db.run(`CREATE TABLE IF NOT EXISTS quotes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          titel   TEXT,
+          quelle  TEXT,
+          zitat   TEXT,
+          genutzt TEXT,
+          text    TEXT,
+          source  TEXT,
+          tag     TEXT
+        )`);
 
-      // Tabelle erstellen, falls nicht vorhanden
-      db.run(`CREATE TABLE IF NOT EXISTS quotes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        text TEXT NOT NULL,
-        source TEXT NOT NULL,
-        tag TEXT
-      )`);
+        // Ensure columns exist for older DBs
+        const colSet = new Set();
+        const stmtCols = db.prepare("PRAGMA table_info(quotes)");
+        while (stmtCols.step()) {
+          const row = stmtCols.getAsObject();
+          colSet.add(row.name);
+        }
+        stmtCols.free();
 
-      searchQuotes();
-    }
+        const required = ['titel','quelle','zitat','genutzt','text','source','tag'];
+        for (const col of required) {
+          if (!colSet.has(col)) {
+            db.run(`ALTER TABLE quotes ADD COLUMN ${col} TEXT`);
+          }
+        }
 
-    function searchQuotes() {
-      if (!db) return;
-      const term = document.getElementById('searchInput').value;
-      const stmt = db.prepare(`SELECT text, source, tag FROM quotes WHERE text LIKE ? OR source LIKE ? OR tag LIKE ?`);
-      stmt.bind([`%${term}%`, `%${term}%`, `%${term}%`]);
+        // Migrate legacy data into new columns where empty
+        db.run(`
+          UPDATE quotes
+             SET zitat   = COALESCE(zitat, text),
+                 quelle  = COALESCE(quelle, source),
+                 titel   = COALESCE(titel, COALESCE(tag, substr(COALESCE(text,''),1,80))),
+                 genutzt = COALESCE(genutzt, '')
+           WHERE zitat IS NULL OR quelle IS NULL OR titel IS NULL OR genutzt IS NULL
+        `);
 
-      const tbody = document.querySelector('#resultsTable tbody');
-      tbody.innerHTML = '';
-      while (stmt.step()) {
-        const [text, source, tag] = stmt.get();
-        const row = `<tr><td>${text}</td><td>${source}</td><td>${tag || ''}</td></tr>`;
-        tbody.innerHTML += row;
+        // Load last pageSize from localStorage
+        const savedSize = localStorage.getItem('quotes_pageSize');
+        if (savedSize) { pageSize = parseInt(savedSize, 10) || 20; $('#pageSize').value = String(pageSize); }
+
+        // Do initial search
+        await searchQuotes(true);
+      } catch (e) {
+        console.error(e);
+        alert("Öffnen fehlgeschlagen oder abgebrochen.");
       }
-      stmt.free();
-    }
-
-    function addQuote() {
-      if (!db) return;
-      const text = document.getElementById('quoteText').value.trim();
-      const source = document.getElementById('quoteSource').value.trim();
-      const tag = document.getElementById('quoteTag').value.trim();
-
-      if (!text || !source) {
-        alert("Zitat und Quelle sind erforderlich.");
-        return;
-      }
-
-      db.run(`INSERT INTO quotes (text, source, tag) VALUES (?, ?, ?)`, [text, source, tag || null]);
-      document.getElementById('quoteText').value = '';
-      document.getElementById('quoteSource').value = '';
-      document.getElementById('quoteTag').value = '';
-      searchQuotes();
-      saveDatabase();
     }
 
     async function saveDatabase() {
-      if (!db || !fileHandle) return;
+      if (!db || !fileHandle) { alert("Keine Datenbank geöffnet."); return; }
       const writable = await fileHandle.createWritable();
       const buffer = db.export();
       await writable.write(buffer);
       await writable.close();
       alert("Datenbank gespeichert.");
     }
+
+    // ---- CRUD ----
+    function addQuote() {
+      if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
+      const titel   = $('#quoteTitle').value.trim();
+      const quelle  = $('#quoteSource').value.trim();
+      const zitat   = $('#quoteText').value.trim();
+      const genutzt = $('#quoteUsed').value.trim();
+
+      if (!titel || !quelle || !zitat) {
+        alert("Titel, Quelle und Zitat sind erforderlich.");
+        return;
+      }
+
+      db.run(
+        `INSERT INTO quotes (titel, quelle, zitat, genutzt, text, source, tag)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [titel, quelle, zitat, genutzt, zitat, quelle, null]
+      );
+
+      // Reset form
+      $('#quoteTitle').value = '';
+      $('#quoteSource').value = '';
+      $('#quoteText').value = '';
+      $('#quoteUsed').value = '';
+
+      // Refresh and persist
+      currentPage = 1;
+      searchQuotes(true);
+      saveDatabase().catch(()=>{});
+    }
+
+    function deleteQuote(id) {
+      if (!db) return;
+      if (!confirm("Dieses Zitat wirklich löschen?")) return;
+      db.run(`DELETE FROM quotes WHERE id = ?`, [id]);
+      selectedIds.delete(id);
+      searchQuotes();
+      saveDatabase().catch(()=>{});
+    }
+
+    function deleteSelected() {
+      if (!db) return;
+      if (selectedIds.size === 0) { alert("Keine markierten Zitate."); return; }
+      if (!confirm(`Wirklich ${selectedIds.size} markierte Zitat(e) löschen?`)) return;
+
+      db.run('BEGIN');
+      try {
+        for (const id of selectedIds) {
+          db.run('DELETE FROM quotes WHERE id = ?', [id]);
+        }
+        db.run('COMMIT');
+      } catch (e) {
+        db.run('ROLLBACK');
+        alert("Löschen fehlgeschlagen.");
+        return;
+      }
+      selectedIds.clear();
+      searchQuotes();
+      saveDatabase().catch(()=>{});
+    }
+
+    // ---- Search & Pagination ----
+    function buildSearchWhere(term) {
+      const like = `%${term}%`;
+      const params = term ? [like, like, like, like, like, like] : [];
+      const where = term
+        ? `WHERE (COALESCE(titel,'')  LIKE ?
+               OR COALESCE(quelle,'') LIKE ?
+               OR COALESCE(zitat,'')  LIKE ?
+               OR COALESCE(genutzt,'') LIKE ?
+               OR COALESCE(text,'')   LIKE ?
+               OR COALESCE(source,'') LIKE ?)`
+        : '';
+      
+      return { where, params };
+    }
+
+    function searchQuotes(resetPage = false) {
+      if (!db) return;
+      const term = $('#searchInput').value.trim();
+      if (resetPage || term !== lastSearchTerm) {
+        currentPage = 1;
+      }
+      lastSearchTerm = term;
+
+      const { where, params } = buildSearchWhere(term);
+      console.log(`Where: ${where}`);
+      // Count total
+      let count = 0;
+      {
+        const stmtCount = db.prepare(`SELECT COUNT(*) as c FROM quotes ${where}`);
+        stmtCount.bind(params);
+        if (stmtCount.step()) {
+          count = stmtCount.getAsObject().c | 0;
+        }
+        stmtCount.free();
+      }
+      totalResults = count;
+
+      // Fetch current page
+      const offset = (currentPage - 1) * pageSize;
+      const stmt = db.prepare(`
+        SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
+               COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
+          FROM quotes
+          ${where}
+         ORDER BY id DESC
+         LIMIT ? OFFSET ?
+      `);
+      stmt.bind([...params, pageSize, offset]);
+
+      const rows = [];
+      while (stmt.step()) {
+        rows.push(stmt.getAsObject());
+      }
+      stmt.free();
+
+      renderResults(rows);
+      updatePagination();
+    }
+
+    function renderResults(rows) {
+      const tbody = $('#resultsTable tbody');
+      tbody.innerHTML = '';
+      const frag = document.createDocumentFragment();
+
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+
+        // Select checkbox
+        const tdSel = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selectedIds.has(row.id);
+        cb.addEventListener('change', () => {
+          if (cb.checked) selectedIds.add(row.id);
+          else selectedIds.delete(row.id);
+          updateSelectedCounter();
+        });
+        tdSel.appendChild(cb);
+        tr.appendChild(tdSel);
+
+        const tdTitle = document.createElement('td');
+        tdTitle.innerHTML = `<div style="font-weight:700">${escapeHTML(row.titel)}</div>`;
+        tr.appendChild(tdTitle);
+
+        const tdQuelle = document.createElement('td');
+        tdQuelle.textContent = row.quelle;
+        tr.appendChild(tdQuelle);
+
+        const tdZitat = document.createElement('td');
+        tdZitat.innerHTML = `<div class="truncate">${escapeHTML(row.zitat)}</div>`;
+        tr.appendChild(tdZitat);
+
+        const tdGenutzt = document.createElement('td');
+        tdGenutzt.innerHTML = `<div class="truncate muted">${escapeHTML(row.genutzt)}</div>`;
+        tr.appendChild(tdGenutzt);
+
+        const tdActions = document.createElement('td');
+        tdActions.className = 'col-actions';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn danger';
+        delBtn.textContent = 'Löschen';
+        delBtn.addEventListener('click', () => deleteQuote(row.id));
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
+
+        frag.appendChild(tr);
+      }
+
+      tbody.appendChild(frag);
+
+      // Refresh header select-all state for current page
+      const pageIds = rows.map(r => r.id);
+      const allSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+      $('#selectAllCheckbox').checked = allSelected;
+
+      // Update counters
+      $('#totalCount').textContent = String(totalResults);
+      updateSelectedCounter();
+
+      // Buttons for page selection helpers
+      $('#selectPageBtn').onclick = () => {
+        for (const id of pageIds) selectedIds.add(id);
+        document.querySelectorAll('#resultsTable tbody input[type="checkbox"]').forEach(cb => cb.checked = true);
+        updateSelectedCounter();
+        $('#selectAllCheckbox').checked = true;
+      };
+      $('#clearPageBtn').onclick = () => {
+        for (const id of pageIds) selectedIds.delete(id);
+        document.querySelectorAll('#resultsTable tbody input[type="checkbox"]').forEach(cb => cb.checked = false);
+        updateSelectedCounter();
+        $('#selectAllCheckbox').checked = false;
+      };
+    }
+
+    function updatePagination() {
+      const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      $('#currentPage').textContent = String(currentPage);
+      $('#totalPages').textContent = String(totalPages);
+
+      $('#prevPageBtn').disabled = currentPage <= 1;
+      $('#nextPageBtn').disabled = currentPage >= totalPages;
+
+      const start = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, totalResults);
+      $('#pageInfo').textContent = `${start}–${end} von ${totalResults}`;
+    }
+
+    function updateSelectedCounter() {
+      $('#selectedCount').textContent = String(selectedIds.size);
+    }
+
+    function toggleSelectAllCurrentPage() {
+      const check = $('#selectAllCheckbox').checked;
+      const boxes = document.querySelectorAll('#resultsTable tbody input[type="checkbox"]');
+      boxes.forEach(cb => {
+        cb.checked = check;
+        const tr = cb.closest('tr');
+        const idx = Array.from(tr.parentNode.children).indexOf(tr);
+        // pull id by reading first hidden? We stored not; better recompute from DOM? Instead, sync via click on buttons 'Seite markieren'/'aufheben'.
+      });
+      // Instead, re-run selection based on currently rendered rows:
+      const ids = Array.from($('#resultsTable tbody').querySelectorAll('tr')).map(tr => {
+        // map to hidden? store id in dataset
+        return Number(tr.dataset.id);
+      });
+    }
+
+    // Attach dataset ids properly
+    function renderResults(rows) {
+      const tbody = $('#resultsTable tbody');
+      tbody.innerHTML = '';
+      const frag = document.createDocumentFragment();
+
+      for (const row of rows) {
+        const tr = document.createElement('tr');
+        tr.dataset.id = String(row.id);
+
+        // Select checkbox
+        const tdSel = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selectedIds.has(row.id);
+        cb.addEventListener('change', () => {
+          if (cb.checked) selectedIds.add(row.id);
+          else selectedIds.delete(row.id);
+          updateSelectedCounter();
+          // update header master
+          const allChecked = Array.from(tbody.querySelectorAll('input[type="checkbox"]')).every(x => x.checked);
+          $('#selectAllCheckbox').checked = allChecked;
+        });
+        tdSel.appendChild(cb);
+        tr.appendChild(tdSel);
+
+        const tdTitle = document.createElement('td');
+        tdTitle.innerHTML = `<div style="font-weight:700">${escapeHTML(row.titel)}</div>`;
+        tr.appendChild(tdTitle);
+
+        const tdQuelle = document.createElement('td');
+        tdQuelle.textContent = row.quelle;
+        tr.appendChild(tdQuelle);
+
+        const tdZitat = document.createElement('td');
+        tdZitat.innerHTML = `<div class="truncate">${escapeHTML(row.zitat)}</div>`;
+        tr.appendChild(tdZitat);
+
+        const tdGenutzt = document.createElement('td');
+        tdGenutzt.innerHTML = `<div class="truncate muted">${escapeHTML(row.genutzt)}</div>`;
+        tr.appendChild(tdGenutzt);
+
+        const tdActions = document.createElement('td');
+        tdActions.className = 'col-actions';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn danger';
+        delBtn.textContent = 'Löschen';
+        delBtn.addEventListener('click', () => deleteQuote(row.id));
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
+
+        frag.appendChild(tr);
+      }
+
+      tbody.appendChild(frag);
+
+      // Header select-all checkbox state
+      const rowsIds = rows.map(r => r.id);
+      const allSelected = rowsIds.length > 0 && rowsIds.every(id => selectedIds.has(id));
+      $('#selectAllCheckbox').checked = allSelected;
+
+      // Update counters
+      $('#totalCount').textContent = String(totalResults);
+      updateSelectedCounter();
+
+      // Helper buttons bound to current page rows
+      $('#selectPageBtn').onclick = () => {
+        for (const id of rowsIds) selectedIds.add(id);
+        tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+        updateSelectedCounter();
+        $('#selectAllCheckbox').checked = true;
+      };
+      $('#clearPageBtn').onclick = () => {
+        for (const id of rowsIds) selectedIds.delete(id);
+        tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        updateSelectedCounter();
+        $('#selectAllCheckbox').checked = false;
+      };
+    }
+
+    // Export selected as RTF
+    function exportSelectedAsRtf() {
+      if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
+      if (selectedIds.size === 0) { alert("Keine markierten Zitate."); return; }
+
+      const ids = Array.from(selectedIds);
+      // Load full rows for all selected ids
+      const placeholders = ids.map(_ => '?').join(',');
+      const rows = [];
+      const stmt = db.prepare(`
+        SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
+               COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
+          FROM quotes
+         WHERE id IN (${placeholders})
+         ORDER BY id ASC
+      `);
+      stmt.bind(ids);
+      while (stmt.step()) rows.push(stmt.getAsObject());
+      stmt.free();
+
+      const rtf = buildRtf(rows);
+      // Plain text fallback with simple formatting
+      const textFallback = rows.map(q => {
+        const parts = [];
+        if (q.titel) parts.push(`**${q.titel}**`);
+        if (q.quelle) parts.push(`_${q.quelle}_`);
+        if (q.zitat) parts.push(q.zitat);
+        if (q.genutzt) parts.push(`(Genutzt: ${q.genutzt})`);
+        return parts.join('\n') + '\n';
+      }).join('\n');
+
+      copyRtfToClipboard(rtf, textFallback);
+    }
+
+    // ---- Event bindings ----
+    window.addEventListener('DOMContentLoaded', () => {
+      $('#openBtn').addEventListener('click', loadDatabase);
+      $('#saveBtn').addEventListener('click', saveDatabase);
+      $('#addQuoteBtn').addEventListener('click', addQuote);
+      $('#deleteSelectedBtn').addEventListener('click', deleteSelected);
+      $('#exportRtfBtn').addEventListener('click', exportSelectedAsRtf);
+      $('#prevPageBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; searchQuotes(); } });
+      $('#nextPageBtn').addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+        if (currentPage < totalPages) { currentPage++; searchQuotes(); }
+      });
+      $('#pageSize').addEventListener('change', () => {
+        pageSize = parseInt($('#pageSize').value, 10) || 20;
+        localStorage.setItem('quotes_pageSize', String(pageSize));
+        currentPage = 1; searchQuotes();
+      });
+      $('#searchInput').addEventListener('input', debounce(() => searchQuotes(true), 250));
+      $('#selectAllCheckbox').addEventListener('change', () => {
+        const tbody = $('#resultsTable tbody');
+        const boxes = tbody.querySelectorAll('input[type="checkbox"]');
+        const check = $('#selectAllCheckbox').checked;
+        boxes.forEach(box => {
+          box.checked = check;
+          const tr = box.closest('tr');
+          const id = Number(tr.dataset.id);
+          if (check) selectedIds.add(id); else selectedIds.delete(id);
+        });
+        updateSelectedCounter();
+      });
+    });
   </script>
 </body>
-</html>
