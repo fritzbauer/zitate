@@ -33,6 +33,7 @@
       color: var(--text);
     }
 
+
     .app {
       max-width: 1100px; margin: 24px auto; padding: 0 16px 80px;
     }
@@ -124,6 +125,80 @@
     .counter { font-size: 12px; color: var(--muted); }
 
     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+        /* --- HINZUGEFÜGTE STYLES FÜR DEN HILFE-TOOLTIP --- */
+    .label-with-help {
+      display: flex;
+      align-items: center;
+      gap: 8px; /* Abstand zwischen Label und ?-Icon */
+      margin-bottom: 6px;
+    }
+    .label-with-help label {
+      margin-bottom: 0; /* Margin vom Label entfernen, da jetzt im Flex-Container */
+    }
+
+    .tooltip-container {
+      position: relative; /* Wichtig für die Positionierung des Tooltips */
+      display: inline-block;
+    }
+
+    .help-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background-color: var(--muted);
+      color: white;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none; /* Text im Icon nicht markierbar machen */
+      transition: background-color 0.2s;
+    }
+    .help-icon:hover {
+      background-color: var(--accent);
+    }
+
+    .tooltip {
+      visibility: hidden; /* Standardmäßig unsichtbar */
+      opacity: 0;
+      position: absolute;
+      top: 20%; /* Position über dem Icon */
+      left: 50%;
+      transform: translateX(-50%); /* Horizontal zentrieren */
+      width: 380px;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px 16px;
+      z-index: 100; /* Stellt sicher, dass der Tooltip über allem liegt */
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap; /* Wichtig, damit Zeilenumbrüche erhalten bleiben */
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    /* Pfeil für den Tooltip */
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: var(--card) transparent transparent transparent;
+    }
+    
+    .tooltip.visible {
+      visibility: visible;
+      opacity: 1;
+    }
+    /* --- ENDE DER HINZUGEFÜGTEN STYLES --- */
   </style>
 </head>
 <body>
@@ -142,6 +217,20 @@
       <div class="toolbar">
         <div style="flex:1; min-width:220px;">
           <label for="searchInput">🔍 Zitate suchen</label>
+            <div class="tooltip-container">
+              <span class="help-icon" id="helpIcon">?</span>
+              <div class="tooltip" id="helpTooltip">
+    Kombiniere Begriffe für präzisere Ergebnisse:
+    <ul>
+      <li> AND: Beide Begriffe müssen vorkommen → Apple AND Banana</li>
+      <li>OR: Einer der Begriffe reicht → Apple OR Banana</li>
+      <li>NOT: Begriffe ausschließen → Apple NOT Banana</li>
+      <li>Klammern: Gruppiere Bedingungen → (Apple OR Banana) AND Bestseller</li>
+      <li>Phrasen: Suche nach exakten Wortgruppen → "best apple"</li>
+    </ul>
+    💡 Groß-/Kleinschreibung ist egal. Mehrere Wörter ohne Operator werden automatisch mit AND verknüpft.
+                </div>
+              </div>              
           <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
           <div class="hint">Ergebnisse sind paginiert. Markierungen bleiben beim Blättern erhalten.</div>
         </div>
@@ -158,7 +247,7 @@
         <div class="counter"><span id="totalCount">0</span> Treffer • Markiert: <span id="selectedCount">0</span></div>
         <button class="btn" id="selectPageBtn">Seite markieren</button>
         <button class="btn ghost" id="clearPageBtn">Seitenmarkierung aufheben</button>
-        <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Markierte als RTF kopieren</button>
+        <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Kopieren</button>
         <!--<button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>-->
       </div>
     </div>
@@ -336,9 +425,6 @@
           quelle  TEXT,
           zitat   TEXT,
           genutzt TEXT,
-          text    TEXT,
-          source  TEXT,
-          tag     TEXT,
           DeletedDateTime TEXT
         )`);
 
@@ -396,9 +482,9 @@
       }
 
       db.run(
-        `INSERT INTO quotes (titel, quelle, zitat, genutzt, text, source, tag)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [titel, quelle, zitat, genutzt, zitat, quelle, null]
+        `INSERT INTO quotes (titel, quelle, zitat, genutzt)
+         VALUES (?, ?, ?, ?)`,
+        [titel, quelle, zitat, genutzt]
       );
 
       // Reset form
@@ -454,7 +540,7 @@
     function buildSearchWhere(term) {
       // Basis: gelöschte Einträge immer ausschließen
       const baseWhere = "WHERE DeletedDateTime IS NULL";
-      const columns = ["titel", "quelle", "zitat", "genutzt", "text", "source"];
+      const columns = ["titel", "quelle", "zitat", "genutzt"];
 
       if (!term || !term.trim()) {
         return { where: baseWhere, params: [] };
@@ -962,6 +1048,22 @@
           if (check) selectedIds.add(id); else selectedIds.delete(id);
         });
         updateSelectedCounter();
+      });
+
+      const helpIcon = document.getElementById('helpIcon');
+      const helpTooltip = document.getElementById('helpTooltip');
+
+      // Tooltip beim Klick auf das Icon anzeigen/verstecken
+      helpIcon.addEventListener('click', (event) => {
+        event.stopPropagation(); // Verhindert, dass der Klick das document-Event auslöst
+        helpTooltip.classList.toggle('visible');
+      });
+
+      // Tooltip verstecken, wenn irgendwo anders hingeklickt wird
+      document.addEventListener('click', (event) => {
+        if (helpTooltip.classList.contains('visible') && !helpIcon.contains(event.target)) {
+          helpTooltip.classList.remove('visible');
+        }
       });
     });
 </script>
