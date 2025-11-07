@@ -113,6 +113,38 @@
       </div>
     </div>
   </div>
+  <!-- Detail View Modal -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>Zitat Details</h2>
+      <input type="hidden" id="detailId">
+      <div class="grid cols-2">
+        <div>
+          <label for="detailTitle">Titel</label>
+          <input type="text" id="detailTitle">
+        </div>
+        <div>
+          <label for="detailSource">Quelle</label>
+          <input type="text" id="detailSource">
+        </div>
+      </div>
+      <div class="grid cols-1" style="margin-top:8px;">
+        <div>
+          <label for="detailText">Zitat</label>
+          <textarea id="detailText" rows="10"></textarea>
+        </div>
+        <div>
+          <label for="detailUsed">Genutzt</label>
+          <textarea id="detailUsed" rows="10"></textarea>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn primary" id="saveDetailBtn">Änderungen speichern</button>
+        <button class="btn danger" id="deleteDetailBtn">Zitat löschen</button>
+      </div>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.js" integrity="sha512-Yra4xuTWinXfBpG2ftgDX8MVmMiOev1FtqiYs51+kEna/5peD0kZqAL1syYCH61f9gxmAFidIJz42IKcRhWMkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="technical/app.js"></script>
   <script src="technical/database.js"></script>

@@ -6,6 +6,11 @@ function renderResults(rows) {
       for (const row of rows) {
         const tr = document.createElement('tr');
         tr.dataset.id = String(row.id);
+        tr.addEventListener('click', (e) => {
+          if (e.target.type !== 'checkbox') {
+            openDetailView(row);
+          }
+        });
 
         // Select checkbox
         const tdSel = document.createElement('td');
@@ -38,15 +43,6 @@ function renderResults(rows) {
         const tdGenutzt = document.createElement('td');
         tdGenutzt.innerHTML = `<div class="truncate muted">${escapeHTML(row.genutzt)}</div>`;
         tr.appendChild(tdGenutzt);
-
-        const tdActions = document.createElement('td');
-        tdActions.className = 'col-actions';
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn';
-        delBtn.textContent = '🗑️';
-        delBtn.addEventListener('click', () => deleteQuote(row.id));
-        tdActions.appendChild(delBtn);
-        tr.appendChild(tdActions);
 
         frag.appendChild(tr);
       }
@@ -96,8 +92,52 @@ function renderResults(rows) {
       $('#selectedCount').textContent = String(selectedIds.size);
     }
 
+    function openDetailView(quote) {
+      $('#detailId').value = quote.id;
+      $('#detailTitle').value = quote.titel;
+      $('#detailSource').value = quote.quelle;
+      $('#detailText').value = quote.zitat;
+      $('#detailUsed').value = quote.genutzt;
+      $('#detailModal').style.display = 'block';
+    }
+
     // ---- Event bindings ----
     window.addEventListener('DOMContentLoaded', () => {
+      const modal = $('#detailModal');
+      const closeButton = modal.querySelector('.close-button');
+
+      closeButton.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      $('#saveDetailBtn').addEventListener('click', async () => {
+        const id = parseInt($('#detailId').value, 10);
+        const quote = {
+          titel: $('#detailTitle').value,
+          quelle: $('#detailSource').value,
+          zitat: $('#detailText').value,
+          genutzt: $('#detailUsed').value
+        };
+        await updateQuote(id, quote);
+        modal.style.display = 'none';
+        searchQuotes(); // Refresh the list
+      });
+
+      $('#deleteDetailBtn').addEventListener('click', async () => {
+        const id = parseInt($('#detailId').value, 10);
+        if (confirm('Soll das Zitat wirklich gelöscht werden?')) {
+          await deleteQuote(id);
+          modal.style.display = 'none';
+          searchQuotes(); // Refresh the list
+        }
+      });
+
       $('#openBtn').addEventListener('click', loadDatabase);
       $('#saveBtn').addEventListener('click', saveDatabase);
       $('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener

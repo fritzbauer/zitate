@@ -90,6 +90,16 @@ function addQuote() {
   searchQuotes(true);
   saveDatabase().catch(()=>{});
 }
+function updateQuote(id, quote) {
+  if (!db) return;
+  db.run(
+    `UPDATE quotes
+     SET titel = ?, quelle = ?, zitat = ?, genutzt = ?
+     WHERE id = ?`,
+    [quote.titel, quote.quelle, quote.zitat, quote.genutzt, id]
+  );
+  saveDatabase().catch(()=>{});
+}
 
 // MODIFIED: deleteQuote now performs a soft delete
 function deleteQuote(id) {
