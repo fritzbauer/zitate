@@ -4,23 +4,33 @@
   <meta charset="UTF-8" />
   <title>Zitate-Datenbank</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.js"></script>
   <style>
     :root{
-      --bg: #0f1221;
-      --card: #171a2b;
-      --muted: #8ea0b8;
-      --text: #e8eefc;
-      --accent: #6ea8fe;
-      --accent-2:#8f7cff;
-      --danger:#ff6b6b;
-      --ok:#2ecc71;
-      --border: rgba(255,255,255,0.08);
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      /* Light palette */
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --muted: #64748b;         /* slate-500 */
+      --text: #1f2937;          /* gray-800 */
+      --accent: #2563eb;        /* blue-600 */
+      --accent-2:#7c3aed;       /* violet-600 */
+      --danger:#e11d48;         /* rose-600 */
+      --ok:#16a34a;             /* green-600 */
+      --border: rgba(17, 24, 39, 0.12); /* subtle dark border */
+      --shadow: 0 8px 24px rgba(17, 24, 39, 0.08), 0 2px 8px rgba(17, 24, 39, 0.06);
       --radius: 12px;
     }
-    html, body { height: 100%; background: radial-gradient(1200px 800px at 20% -10%, #1a1f3d 0%, #0b0e1a 60%, #070914 100%); }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 0; color: var(--text); }
+
+    html, body {
+      height: 100%;
+      /* soft light vignette */
+      background: radial-gradient(1200px 800px at 20% -10%, #ffffff 0%, #f3f5fb 55%, #eef1f8 100%);
+    }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      color: var(--text);
+    }
 
     .app {
       max-width: 1100px; margin: 24px auto; padding: 0 16px 80px;
@@ -30,32 +40,47 @@
     .topbar {
       position: sticky; top: 0; z-index: 10;
       backdrop-filter: blur(6px);
-      background: linear-gradient(180deg, rgba(11,14,26,0.85), rgba(11,14,26,0.55) 70%, rgba(11,14,26,0));
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65) 70%, rgba(255,255,255,0));
       border-bottom: 1px solid var(--border);
     }
     .topbar-inner { display:flex; align-items:center; gap:12px; padding:12px 16px; max-width:1100px; margin:0 auto; }
-    .brand { font-weight: 700; letter-spacing: .3px; font-size: 18px; margin-right: auto; }
+    .brand { font-weight: 700; letter-spacing: .3px; font-size: 18px; margin-right: auto; color: #0f172a; }
 
     /* Buttons & inputs */
     .btn{
       display:inline-flex; align-items:center; gap:.5rem;
-      background: linear-gradient(180deg, #29304f, #1b213c);
-      color: var(--text); border:1px solid var(--border); border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff, #f2f5fb);
+      color: var(--text);
+      border:1px solid var(--border); border-radius: 10px;
       padding:10px 14px; cursor:pointer; box-shadow: var(--shadow);
       transition:.15s transform ease, .15s filter ease, .15s background ease;
     }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
-    .btn:active{ transform: translateY(0); filter: brightness(.98); }
-    .btn.primary{ background: linear-gradient(180deg, var(--accent), #3a6df0); color:#0b0e1a; font-weight: 700; }
-    .btn.danger{ background: linear-gradient(180deg, #ff7777, #f95757); color:#0b0e1a; font-weight: 700; }
-    .btn.ghost{ background: transparent; border-color: var(--border); }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active{ transform: translateY(0); filter: brightness(.99); }
+    .btn.primary{
+      background: linear-gradient(180deg, #60a5fa, var(--accent));
+      color:#ffffff; font-weight: 700; border-color: transparent;
+    }
+    .btn.danger{
+      background: linear-gradient(180deg, #fb7185, var(--danger));
+      color:#ffffff; font-weight: 700; border-color: transparent;
+    }
+    .btn.ghost{
+      background: transparent; border-color: var(--border); color: #0f172a;
+    }
 
     .toolbar { display:flex; flex-wrap: wrap; gap: 10px; align-items:center; }
     .toolbar .spacer { flex: 1; }
 
-    .card { background: linear-gradient(180deg, #171a2b, #14182a); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+    .card {
+      background: linear-gradient(180deg, var(--card), #fafbff);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
 
-    .section-title { margin: 18px 0 8px; font-size: 18px; font-weight: 700; color: #c7d6ff; }
+    .section-title { margin: 18px 0 8px; font-size: 18px; font-weight: 700; color: #334155; }
 
     .grid { display:grid; gap:12px; }
     .grid.cols-2 { grid-template-columns: 1fr 1fr; }
@@ -63,14 +88,18 @@
     @media (max-width: 800px){ .grid.cols-2 { grid-template-columns: 1fr; } }
 
     label { font-size: 12px; color: var(--muted); display:block; margin-bottom:6px; letter-spacing:.2px; }
+
     input[type="text"], textarea, select {
       width: 100%; box-sizing: border-box; color: var(--text);
-      background: #0f1324; border:1px solid var(--border); border-radius: 10px;
+      background: #ffffff; border:1px solid var(--border); border-radius: 10px;
       padding: 10px 12px; outline: none; transition: .15s border ease, .15s box-shadow ease;
-      box-shadow: inset 0 0 0 1px transparent, 0 8px 18px rgba(0,0,0,0.25);
+      box-shadow: inset 0 0 0 1px transparent, 0 6px 14px rgba(17,24,39,0.06);
     }
-    input::placeholder, textarea::placeholder { color: #6f7c97; }
-    input:focus, textarea:focus, select:focus { border-color: #5f86ff; box-shadow: 0 0 0 4px rgba(94, 134, 255, .15); }
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
+    input:focus, textarea:focus, select:focus {
+      border-color: #93c5fd; /* light-blue-300 */
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, .18);
+    }
     textarea { resize: vertical; }
 
     /* Table */
@@ -78,17 +107,18 @@
     thead th {
       text-align:left; font-size: 12px; color: var(--muted); font-weight: 700;
       border-bottom: 1px solid var(--border); padding: 10px; position: sticky; top: 0;
-      background: #14182a;
+      background: #f8fafc; /* light header */
+      backdrop-filter: blur(2px);
     }
     tbody td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody tr:hover { background: rgba(15, 23, 42, 0.035); } /* subtle slate tint */
     .col-actions { width: 1%; white-space: nowrap; }
     .truncate { display:-webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 
     .muted { color: var(--muted); font-size: 12px; }
 
     .pagination { display:flex; align-items:center; gap:10px; }
-    .pill { padding:6px 10px; border:1px solid var(--border); border-radius: 999px; }
+    .pill { padding:6px 10px; border:1px solid var(--border); border-radius: 999px; background:#fff; }
 
     .counter { font-size: 12px; color: var(--muted); }
 
@@ -101,6 +131,7 @@
       <div class="brand">🗂️ Zitate‑Datenbank</div>
       <button class="btn" id="openBtn">📂&nbsp;Datenbank öffnen</button>
       <button class="btn" id="saveBtn">💾&nbsp;Speichern</button>
+      <button id="dropTableBtn" class="btn">Drop Table</button>
     </div>
   </div>
 
@@ -127,7 +158,7 @@
         <button class="btn" id="selectPageBtn">Seite markieren</button>
         <button class="btn ghost" id="clearPageBtn">Seitenmarkierung aufheben</button>
         <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Markierte als RTF kopieren</button>
-        <button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>
+        <!--<button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>-->
       </div>
     </div>
 
@@ -187,7 +218,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     let db;
     let fileHandle;
     let currentPage = 1;
@@ -267,7 +298,6 @@
       if (navigator.clipboard && window.ClipboardItem) {
         try {
           const blob = new Blob([rtfString], { type: 'text/rtf' });
-          //const plain = ["text/plain"]: rtfString,
           const item = new ClipboardItem({ 'text/rtf': blob, 'text/plain': new Blob([plainTextFallback], { type: 'text/plain' }) });
           await navigator.clipboard.write([item]);
           alert('Markierte Zitate wurden als RTF in die Zwischenablage kopiert.');
@@ -284,10 +314,9 @@
         alert('Kopieren in die Zwischenablage nicht möglich (Berechtigungen?).\nFehler: ' + err);
         console.error('Clipboard write failed:', err);
       }
-
     }
 
-    // ---- DB init & migration ----
+    // ---- DB init ----
     async function loadDatabase() {
       try {
         const [handle] = await window.showOpenFilePicker({
@@ -296,10 +325,10 @@
         fileHandle = handle;
         const file = await fileHandle.getFile();
         const buffer = await file.arrayBuffer();
-        const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+        const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/${file}` });
         db = new SQL.Database(new Uint8Array(buffer));
 
-        // Create table if not exists (new schema includes legacy cols for compatibility)
+        // Create table if not exists with the new schema
         db.run(`CREATE TABLE IF NOT EXISTS quotes (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           titel   TEXT,
@@ -308,34 +337,9 @@
           genutzt TEXT,
           text    TEXT,
           source  TEXT,
-          tag     TEXT
+          tag     TEXT,
+          DeletedDateTime TEXT
         )`);
-
-        // Ensure columns exist for older DBs
-        const colSet = new Set();
-        const stmtCols = db.prepare("PRAGMA table_info(quotes)");
-        while (stmtCols.step()) {
-          const row = stmtCols.getAsObject();
-          colSet.add(row.name);
-        }
-        stmtCols.free();
-
-        const required = ['titel','quelle','zitat','genutzt','text','source','tag'];
-        for (const col of required) {
-          if (!colSet.has(col)) {
-            db.run(`ALTER TABLE quotes ADD COLUMN ${col} TEXT`);
-          }
-        }
-
-        // Migrate legacy data into new columns where empty
-        db.run(`
-          UPDATE quotes
-             SET zitat   = COALESCE(zitat, text),
-                 quelle  = COALESCE(quelle, source),
-                 titel   = COALESCE(titel, COALESCE(tag, substr(COALESCE(text,''),1,80))),
-                 genutzt = COALESCE(genutzt, '')
-           WHERE zitat IS NULL OR quelle IS NULL OR titel IS NULL OR genutzt IS NULL
-        `);
 
         // Load last pageSize from localStorage
         const savedSize = localStorage.getItem('quotes_pageSize');
@@ -355,7 +359,26 @@
       const buffer = db.export();
       await writable.write(buffer);
       await writable.close();
-      alert("Datenbank gespeichert.");
+      //alert("Datenbank gespeichert.");
+    }
+
+    // ---- NEW: Function to drop the table ----
+    async function dropTable() {
+        if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
+        if (!confirm("WARNUNG: Sind Sie sicher, dass Sie alle Zitate permanent löschen wollen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.")) {
+            return;
+        }
+        try {
+            db.run('DROP TABLE IF EXISTS quotes');
+            alert("Die Tabelle 'quotes' wurde gelöscht.");
+            // Refresh the view, which will now be empty
+            await searchQuotes(true);
+            // Save the change to the file
+            await saveDatabase();
+        } catch (e) {
+            console.error(e);
+            alert("Fehler beim Löschen der Tabelle: " + e.message);
+        }
     }
 
     // ---- CRUD ----
@@ -389,49 +412,57 @@
       saveDatabase().catch(()=>{});
     }
 
+    // MODIFIED: deleteQuote now performs a soft delete
     function deleteQuote(id) {
       if (!db) return;
       if (!confirm("Dieses Zitat wirklich löschen?")) return;
-      db.run(`DELETE FROM quotes WHERE id = ?`, [id]);
+      const timestamp = new Date().toISOString();
+      db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE id = ?`, [timestamp, id]);
       selectedIds.delete(id);
       searchQuotes();
       saveDatabase().catch(()=>{});
     }
 
+    // MODIFIED: deleteSelected now performs a soft delete
     function deleteSelected() {
       if (!db) return;
       if (selectedIds.size === 0) { alert("Keine markierten Zitate."); return; }
       if (!confirm(`Wirklich ${selectedIds.size} markierte Zitat(e) löschen?`)) return;
 
-      db.run('BEGIN');
+      const ids = Array.from(selectedIds);
+      const placeholders = ids.map(() => '?').join(',');
+      const timestamp = new Date().toISOString();
+
       try {
-        for (const id of selectedIds) {
-          db.run('DELETE FROM quotes WHERE id = ?', [id]);
-        }
-        db.run('COMMIT');
+        db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE id IN (${placeholders})`, [timestamp, ...ids]);
       } catch (e) {
-        db.run('ROLLBACK');
-        alert("Löschen fehlgeschlagen.");
+        alert("Löschen fehlgeschlagen: " + e.message);
         return;
       }
+
       selectedIds.clear();
       searchQuotes();
       saveDatabase().catch(()=>{});
     }
 
     // ---- Search & Pagination ----
+    // MODIFIED: buildSearchWhere now excludes soft-deleted items
     function buildSearchWhere(term) {
       const like = `%${term}%`;
-      const params = term ? [like, like, like, like, like, like] : [];
-      const where = term
-        ? `WHERE (COALESCE(titel,'')  LIKE ?
-               OR COALESCE(quelle,'') LIKE ?
-               OR COALESCE(zitat,'')  LIKE ?
-               OR COALESCE(genutzt,'') LIKE ?
-               OR COALESCE(text,'')   LIKE ?
-               OR COALESCE(source,'') LIKE ?)`
-        : '';
-      
+      let params = [];
+      // Base condition to always exclude deleted items
+      let where = 'WHERE DeletedDateTime IS NULL';
+
+      if (term) {
+        params = [like, like, like, like, like, like];
+        // Append search conditions
+        where += ` AND (COALESCE(titel,'')  LIKE ?
+                      OR COALESCE(quelle,'') LIKE ?
+                      OR COALESCE(zitat,'')  LIKE ?
+                      OR COALESCE(genutzt,'') LIKE ?
+                      OR COALESCE(text,'')   LIKE ?
+                      OR COALESCE(source,'') LIKE ?)`;
+      }
       return { where, params };
     }
 
@@ -444,8 +475,8 @@
       lastSearchTerm = term;
 
       const { where, params } = buildSearchWhere(term);
-      console.log(`Where: ${where}`);
-      // Count total
+
+      // Count total matching (non-deleted) results
       let count = 0;
       {
         const stmtCount = db.prepare(`SELECT COUNT(*) as c FROM quotes ${where}`);
@@ -459,14 +490,14 @@
 
       // Fetch current page
       const offset = (currentPage - 1) * pageSize;
-      const stmt = db.prepare(`
-        SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
+      const stmt = db.prepare(
+        `SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
                COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
           FROM quotes
           ${where}
          ORDER BY id DESC
-         LIMIT ? OFFSET ?
-      `);
+         LIMIT ? OFFSET ?`
+      );
       stmt.bind([...params, pageSize, offset]);
 
       const rows = [];
@@ -478,118 +509,9 @@
       renderResults(rows);
       updatePagination();
     }
-
-    function renderResults(rows) {
-      const tbody = $('#resultsTable tbody');
-      tbody.innerHTML = '';
-      const frag = document.createDocumentFragment();
-
-      for (const row of rows) {
-        const tr = document.createElement('tr');
-
-        // Select checkbox
-        const tdSel = document.createElement('td');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selectedIds.has(row.id);
-        cb.addEventListener('change', () => {
-          if (cb.checked) selectedIds.add(row.id);
-          else selectedIds.delete(row.id);
-          updateSelectedCounter();
-        });
-        tdSel.appendChild(cb);
-        tr.appendChild(tdSel);
-
-        const tdTitle = document.createElement('td');
-        tdTitle.innerHTML = `<div style="font-weight:700">${escapeHTML(row.titel)}</div>`;
-        tr.appendChild(tdTitle);
-
-        const tdQuelle = document.createElement('td');
-        tdQuelle.textContent = row.quelle;
-        tr.appendChild(tdQuelle);
-
-        const tdZitat = document.createElement('td');
-        tdZitat.innerHTML = `<div class="truncate">${escapeHTML(row.zitat)}</div>`;
-        tr.appendChild(tdZitat);
-
-        const tdGenutzt = document.createElement('td');
-        tdGenutzt.innerHTML = `<div class="truncate muted">${escapeHTML(row.genutzt)}</div>`;
-        tr.appendChild(tdGenutzt);
-
-        const tdActions = document.createElement('td');
-        tdActions.className = 'col-actions';
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn danger';
-        delBtn.textContent = 'Löschen';
-        delBtn.addEventListener('click', () => deleteQuote(row.id));
-        tdActions.appendChild(delBtn);
-        tr.appendChild(tdActions);
-
-        frag.appendChild(tr);
-      }
-
-      tbody.appendChild(frag);
-
-      // Refresh header select-all state for current page
-      const pageIds = rows.map(r => r.id);
-      const allSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
-      $('#selectAllCheckbox').checked = allSelected;
-
-      // Update counters
-      $('#totalCount').textContent = String(totalResults);
-      updateSelectedCounter();
-
-      // Buttons for page selection helpers
-      $('#selectPageBtn').onclick = () => {
-        for (const id of pageIds) selectedIds.add(id);
-        document.querySelectorAll('#resultsTable tbody input[type="checkbox"]').forEach(cb => cb.checked = true);
-        updateSelectedCounter();
-        $('#selectAllCheckbox').checked = true;
-      };
-      $('#clearPageBtn').onclick = () => {
-        for (const id of pageIds) selectedIds.delete(id);
-        document.querySelectorAll('#resultsTable tbody input[type="checkbox"]').forEach(cb => cb.checked = false);
-        updateSelectedCounter();
-        $('#selectAllCheckbox').checked = false;
-      };
-    }
-
-    function updatePagination() {
-      const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      $('#currentPage').textContent = String(currentPage);
-      $('#totalPages').textContent = String(totalPages);
-
-      $('#prevPageBtn').disabled = currentPage <= 1;
-      $('#nextPageBtn').disabled = currentPage >= totalPages;
-
-      const start = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-      const end = Math.min(currentPage * pageSize, totalResults);
-      $('#pageInfo').textContent = `${start}–${end} von ${totalResults}`;
-    }
-
-    function updateSelectedCounter() {
-      $('#selectedCount').textContent = String(selectedIds.size);
-    }
-
-    function toggleSelectAllCurrentPage() {
-      const check = $('#selectAllCheckbox').checked;
-      const boxes = document.querySelectorAll('#resultsTable tbody input[type="checkbox"]');
-      boxes.forEach(cb => {
-        cb.checked = check;
-        const tr = cb.closest('tr');
-        const idx = Array.from(tr.parentNode.children).indexOf(tr);
-        // pull id by reading first hidden? We stored not; better recompute from DOM? Instead, sync via click on buttons 'Seite markieren'/'aufheben'.
-      });
-      // Instead, re-run selection based on currently rendered rows:
-      const ids = Array.from($('#resultsTable tbody').querySelectorAll('tr')).map(tr => {
-        // map to hidden? store id in dataset
-        return Number(tr.dataset.id);
-      });
-    }
-
-    // Attach dataset ids properly
+    
+    // NOTE: Two renderResults functions were present in the original code.
+    // I have kept only the more complete, second one.
     function renderResults(rows) {
       const tbody = $('#resultsTable tbody');
       tbody.innerHTML = '';
@@ -634,8 +556,8 @@
         const tdActions = document.createElement('td');
         tdActions.className = 'col-actions';
         const delBtn = document.createElement('button');
-        delBtn.className = 'btn danger';
-        delBtn.textContent = 'Löschen';
+        delBtn.className = 'btn';
+        delBtn.textContent = '🗑️';
         delBtn.addEventListener('click', () => deleteQuote(row.id));
         tdActions.appendChild(delBtn);
         tr.appendChild(tdActions);
@@ -669,6 +591,25 @@
       };
     }
 
+    function updatePagination() {
+      const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      $('#currentPage').textContent = String(currentPage);
+      $('#totalPages').textContent = String(totalPages);
+
+      $('#prevPageBtn').disabled = currentPage <= 1;
+      $('#nextPageBtn').disabled = currentPage >= totalPages;
+
+      const start = totalResults === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, totalResults);
+      $('#pageInfo').textContent = `${start}–${end} von ${totalResults}`;
+    }
+
+    function updateSelectedCounter() {
+      $('#selectedCount').textContent = String(selectedIds.size);
+    }
+
     // Export selected as RTF
     function exportSelectedAsRtf() {
       if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
@@ -676,15 +617,15 @@
 
       const ids = Array.from(selectedIds);
       // Load full rows for all selected ids
-      const placeholders = ids.map(_ => '?').join(',');
+      const placeholders = ids.map(() => '?').join(',');
       const rows = [];
-      const stmt = db.prepare(`
-        SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
+      const stmt = db.prepare(
+        `SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
                COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
           FROM quotes
-         WHERE id IN (${placeholders})
-         ORDER BY id ASC
-      `);
+         WHERE id IN (${placeholders}) AND DeletedDateTime IS NULL
+         ORDER BY id ASC` // Added DeletedDateTime check for safety
+      );
       stmt.bind(ids);
       while (stmt.step()) rows.push(stmt.getAsObject());
       stmt.free();
@@ -693,7 +634,7 @@
       // Plain text fallback with simple formatting
       const textFallback = rows.map(q => {
         const parts = [];
-        if (q.titel) parts.push(`**${q.titel}**`);
+        if (q.titel) parts.push(`*${q.titel}*`);
         if (q.quelle) parts.push(`_${q.quelle}_`);
         if (q.zitat) parts.push(q.zitat);
         if (q.genutzt) parts.push(`(Genutzt: ${q.genutzt})`);
@@ -707,8 +648,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       $('#openBtn').addEventListener('click', loadDatabase);
       $('#saveBtn').addEventListener('click', saveDatabase);
+      $('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
       $('#addQuoteBtn').addEventListener('click', addQuote);
-      $('#deleteSelectedBtn').addEventListener('click', deleteSelected);
+      //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
       $('#exportRtfBtn').addEventListener('click', exportSelectedAsRtf);
       $('#prevPageBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; searchQuotes(); } });
       $('#nextPageBtn').addEventListener('click', () => {
@@ -734,5 +676,5 @@
         updateSelectedCounter();
       });
     });
-  </script>
+</script>
 </body>
