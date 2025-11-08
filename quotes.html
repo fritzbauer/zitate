@@ -20,9 +20,11 @@
   <div class="app">
     <!-- Suche -->
     <div class="card" style="margin-top:12px;">
-      <div class="toolbar">
-        <div style="flex:1; min-width:220px;">
+      <div class="search-bar">
+        <div class="search-input-group">
           <label for="searchInput">🔍 Zitate suchen</label>
+          <div class="search-with-help">
+            <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
             <div class="tooltip-container">
               <span class="help-icon" id="helpIcon">?</span>
               <div class="tooltip" id="helpTooltip">
@@ -37,9 +39,10 @@
     💡 Groß-/Kleinschreibung ist egal. Mehrere Wörter ohne Operator werden automatisch mit AND verknüpft.
                 </div>
               </div>              
-          <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />          
+        
+          </div>
         </div>
-        <div>
+        <div class="page-size-container">
           <label for="pageSize">Treffer pro Seite</label>
           <select id="pageSize">
             <option value="10">10</option>
