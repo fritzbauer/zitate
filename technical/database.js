@@ -7,7 +7,7 @@ async function loadDatabase() {
     fileHandle = handle;
     const file = await fileHandle.getFile();
     const buffer = await file.arrayBuffer();
-    const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/${file}` });
+    const SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
     db = new SQL.Database(new Uint8Array(buffer));
 
     // Create table if not exists with the new schema
