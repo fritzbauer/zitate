@@ -63,6 +63,7 @@ function renderResults(rows) {
       updateSelectedCounter();
 
       // Helper buttons bound to current page rows
+      /*
       $('#selectPageBtn').onclick = () => {
         for (const id of rowsIds) selectedIds.add(id);
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
@@ -74,7 +75,7 @@ function renderResults(rows) {
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         updateSelectedCounter();
         $('#selectAllCheckbox').checked = false;
-      };
+      };*/
     }
 
     function updatePagination() {
@@ -146,6 +147,9 @@ function renderResults(rows) {
             $('#prevQuoteBtn').click();
           } else if (e.key === 'ArrowRight') {
             $('#nextQuoteBtn').click();
+          } else if (e.key === ' ' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            $('#detailExportCb').click();
           }
         }
       });
