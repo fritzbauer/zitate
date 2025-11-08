@@ -252,21 +252,24 @@
   z-index: 1000;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0,0,0,0.4);
+  overflow: hidden;
 }
 
 .modal-content {
   background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid #888;
-  width: 80%;
-  max-width: 700px;
+  position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  height: 100vh;
+  width: 80vw;
+  max-width: 1200px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .close-button {
@@ -274,6 +277,15 @@
   float: right;
   font-size: 28px;
   font-weight: bold;
+/* Zitat-Textarea im Modal Details maximal wachsen lassen */
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+  resize: none;
+}
+
+#detailText {
+  height: 400px;
 }
 
 .close-button:hover,

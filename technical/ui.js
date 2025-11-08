@@ -150,6 +150,16 @@ function renderResults(rows) {
           } else if (e.key === ' ' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
             e.preventDefault();
             $('#detailExportCb').click();
+          } else if (e.key === 'Escape') {
+            // Prüfe ob ein Textfeld (input/textarea) im Modal fokussiert ist
+            const modal = $('#detailModal');
+            const active = document.activeElement;
+            const isTextField = (active && modal.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA'));
+            if (isTextField) {
+              active.blur();
+            } else {
+              modal.style.display = 'none';
+            }
           }
         }
       });
