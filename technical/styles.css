@@ -226,3 +226,22 @@
   text-decoration: none;
   cursor: pointer;
 }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.export-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

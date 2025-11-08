@@ -37,8 +37,7 @@
     💡 Groß-/Kleinschreibung ist egal. Mehrere Wörter ohne Operator werden automatisch mit AND verknüpft.
                 </div>
               </div>              
-          <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
-          <div class="hint">Ergebnisse sind paginiert. Markierungen bleiben beim Blättern erhalten.</div>
+          <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />          
         </div>
         <div>
           <label for="pageSize">Treffer pro Seite</label>
@@ -51,8 +50,8 @@
         </div>
         <div class="spacer"></div>
         <div class="counter"><span id="totalCount">0</span> Treffer • Markiert: <span id="selectedCount">0</span></div>
-        <button class="btn" id="selectPageBtn">Seite markieren</button>
-        <button class="btn ghost" id="clearPageBtn">Seitenmarkierung aufheben</button>
+        <!--<button class="btn" id="selectPageBtn">Seite markieren</button>
+        <button class="btn ghost" id="clearPageBtn">Seitenmarkierung aufheben</button>-->
         <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Kopieren</button>
         <!--<button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>-->
       </div>
@@ -116,8 +115,18 @@
   <!-- Detail View Modal -->
   <div id="detailModal" class="modal">
     <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <h2>Zitat Details</h2>
+      <div class="modal-header">
+        <h2>Zitat Details</h2>
+        <div class="modal-nav">
+          <div class="export-check">
+            <input type="checkbox" id="detailExportCb">
+            <label for="detailExportCb">Für Export markieren</label>
+          </div>
+          <button id="prevQuoteBtn" class="btn ghost">◀</button>
+          <button id="nextQuoteBtn" class="btn ghost">▶</button>
+          <span class="close-button">&times;</span>
+        </div>
+      </div>
       <input type="hidden" id="detailId">
       <div class="grid cols-2">
         <div>
@@ -139,9 +148,11 @@
           <textarea id="detailUsed" rows="10"></textarea>
         </div>
       </div>
-      <div style="margin-top:12px;">
-        <button class="btn primary" id="saveDetailBtn">Änderungen speichern</button>
-        <button class="btn danger" id="deleteDetailBtn">Zitat löschen</button>
+      <div style="margin-top:12px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <button class="btn primary" id="saveDetailBtn">Änderungen speichern</button>
+          <button class="btn danger" id="deleteDetailBtn">Zitat löschen</button>
+        </div>     
       </div>
     </div>
   </div>

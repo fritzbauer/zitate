@@ -1,14 +1,18 @@
+let currentResults = [];
+let currentIndex = -1;
+
 function renderResults(rows) {
+      currentResults = rows;
       const tbody = $('#resultsTable tbody');
       tbody.innerHTML = '';
       const frag = document.createDocumentFragment();
 
-      for (const row of rows) {
+      rows.forEach((row, index) => {
         const tr = document.createElement('tr');
         tr.dataset.id = String(row.id);
         tr.addEventListener('click', (e) => {
           if (e.target.type !== 'checkbox') {
-            openDetailView(row);
+            openDetailView(index);
           }
         });
 
@@ -45,7 +49,7 @@ function renderResults(rows) {
         tr.appendChild(tdGenutzt);
 
         frag.appendChild(tr);
-      }
+      });
 
       tbody.appendChild(frag);
 
@@ -92,13 +96,21 @@ function renderResults(rows) {
       $('#selectedCount').textContent = String(selectedIds.size);
     }
 
-    function openDetailView(quote) {
+    function openDetailView(index) {
+      currentIndex = index;
+      const quote = currentResults[currentIndex];
+      if (!quote) return;
+
       $('#detailId').value = quote.id;
       $('#detailTitle').value = quote.titel;
       $('#detailSource').value = quote.quelle;
       $('#detailText').value = quote.zitat;
       $('#detailUsed').value = quote.genutzt;
       $('#detailModal').style.display = 'block';
+      $('#detailExportCb').checked = selectedIds.has(quote.id);
+
+      $('#prevQuoteBtn').disabled = currentIndex === 0;
+      $('#nextQuoteBtn').disabled = currentIndex === currentResults.length - 1;
     }
 
     // ---- Event bindings ----
@@ -113,6 +125,28 @@ function renderResults(rows) {
       window.addEventListener('click', (event) => {
         if (event.target === modal) {
           modal.style.display = 'none';
+        }
+      });
+
+      $('#prevQuoteBtn').addEventListener('click', () => {
+        if (currentIndex > 0) {
+          openDetailView(currentIndex - 1);
+        }
+      });
+
+      $('#nextQuoteBtn').addEventListener('click', () => {
+        if (currentIndex < currentResults.length - 1) {
+          openDetailView(currentIndex + 1);
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if ($('#detailModal').style.display === 'block') {
+          if (e.key === 'ArrowLeft') {
+            $('#prevQuoteBtn').click();
+          } else if (e.key === 'ArrowRight') {
+            $('#nextQuoteBtn').click();
+          }
         }
       });
 
@@ -135,6 +169,21 @@ function renderResults(rows) {
           await deleteQuote(id);
           modal.style.display = 'none';
           searchQuotes(); // Refresh the list
+        }
+      });
+
+      $('#detailExportCb').addEventListener('change', () => {
+        const id = parseInt($('#detailId').value, 10);
+        if ($('#detailExportCb').checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+        updateSelectedCounter();
+        // Also update the checkbox in the main table
+        const mainCb = document.querySelector(`#resultsTable tr[data-id='${id}'] input[type='checkbox']`);
+        if (mainCb) {
+          mainCb.checked = $('#detailExportCb').checked;
         }
       });
 
