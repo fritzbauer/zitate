@@ -192,7 +192,7 @@ function renderResults(rows) {
       });
 
       $('#openBtn').addEventListener('click', loadDatabase);
-      $('#saveBtn').addEventListener('click', saveDatabase);
+      //$('#saveBtn').addEventListener('click', saveDatabase);
       $('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
       $('#addQuoteBtn').addEventListener('click', addQuote);
       //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
