@@ -10,15 +10,17 @@ async function loadDatabase() {
     const SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
     db = new SQL.Database(new Uint8Array(buffer));
 
-    // Create table if not exists with the new schema
-    db.run(`CREATE TABLE IF NOT EXISTS quotes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      titel   TEXT,
-      quelle  TEXT,
-      zitat   TEXT,
-      genutzt TEXT,
-      DeletedDateTime TEXT
+    // Create FTS5 virtual table if not exists
+    db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
+      titel,
+      quelle,
+      zitat,
+      genutzt,
+      DeletedDateTime UNINDEXED
     )`);
+    
+    // Set the ranking weights using BM25
+    db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
 
     // Load last pageSize from localStorage
     const savedSize = localStorage.getItem('quotes_pageSize');
@@ -74,8 +76,8 @@ function addQuote() {
   }
 
   db.run(
-    `INSERT INTO quotes (titel, quelle, zitat, genutzt)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
+     VALUES (?, ?, ?, ?, NULL)`,
     [titel, quelle, zitat, genutzt]
   );
 

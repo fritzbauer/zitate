@@ -17,14 +17,13 @@ LOREM_GENUZT = (
 )
 
 CREATE_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS quotes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    titel   TEXT,
-    quelle  TEXT,
-    zitat   TEXT,
-    genutzt TEXT,
-    DeletedDateTime TEXT
-);
+CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
+      titel,
+      quelle,
+      zitat,
+      genutzt,
+      DeletedDateTime UNINDEXED
+    );
 """
 
 INSERT_SQL = """
@@ -185,6 +184,10 @@ def main():
             inserted += len(rows)
             if verbose:
                 print(f"Eingefügt: {inserted} / verarbeitet: {total} (finaler Batch)")
+
+        conn.execute("INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')")
+        conn.execute("INSERT INTO quotes(quotes) VALUES('rebuild')")
+        conn.execute("INSERT INTO quotes(quotes) VALUES('optimize')")
 
     finally:
         conn.close()

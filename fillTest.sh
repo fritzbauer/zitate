@@ -1,2 +1,2 @@
-python3 fillTest.py --db ./rouven.sqlite --root /home/rouven/Nextcloud/Syncthing/Logseq/journals
-python3 fillTest.py --db ./rouven.sqlite --root /home/rouven/Nextcloud/Syncthing/Logseq/pages
+python3 fillTest.py --db ./data.sqlite --root ~/Nextcloud/Syncthing/Logseq/journals
+python3 fillTest.py --db ./data.sqlite --root ~/Nextcloud/Syncthing/Logseq/pages
