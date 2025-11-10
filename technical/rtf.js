@@ -86,11 +86,11 @@ function exportSelectedAsRtf() {
   const placeholders = ids.map(() => '?').join(',');
   const rows = [];
   const stmt = db.prepare(
-    `SELECT id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
-           COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
-      FROM quotes
-     WHERE id IN (${placeholders}) AND DeletedDateTime IS NULL
-     ORDER BY id ASC` // Added DeletedDateTime check for safety
+   `SELECT rowid as id, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
+        COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
+    FROM quotes
+    WHERE rowid IN (${placeholders}) AND DeletedDateTime IS NULL
+    ORDER BY rowid ASC` // Added DeletedDateTime check for safety
   );
   stmt.bind(ids);
   while (stmt.step()) rows.push(stmt.getAsObject());

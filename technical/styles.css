@@ -245,6 +245,11 @@
       visibility: visible;
       opacity: 1;
     }
+
+    /* Ensure detail display divs preserve line breaks and whitespace */
+    .detail-display {
+      white-space: pre-wrap;
+    }
 /* Modal Styles */
 .modal {
   display: none;
@@ -312,4 +317,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Highlight styling for FTS5 highlight() output */
+.highlight {
+  background: #fff59d; /* soft yellow */
+  padding: 0 2px;
+  border-radius: 2px;
 }

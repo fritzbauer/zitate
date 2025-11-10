@@ -97,7 +97,7 @@ function updateQuote(id, quote) {
   db.run(
     `UPDATE quotes
      SET titel = ?, quelle = ?, zitat = ?, genutzt = ?
-     WHERE id = ?`,
+     WHERE rowid = ?`,
     [quote.titel, quote.quelle, quote.zitat, quote.genutzt, id]
   );
   saveDatabase().catch(()=>{});
@@ -108,7 +108,7 @@ function deleteQuote(id) {
   if (!db) return;
   if (!confirm("Dieses Zitat wirklich löschen?")) return;
   const timestamp = new Date().toISOString();
-  db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE id = ?`, [timestamp, id]);
+  db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE rowid = ?`, [timestamp, id]);
   selectedIds.delete(id);
   searchQuotes();
   saveDatabase().catch(()=>{});
@@ -125,7 +125,7 @@ function deleteSelected() {
   const timestamp = new Date().toISOString();
 
   try {
-    db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE id IN (${placeholders})`, [timestamp, ...ids]);
+    db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE rowid IN (${placeholders})`, [timestamp, ...ids]);
   } catch (e) {
     alert("Löschen fehlgeschlagen: " + e.message);
     return;

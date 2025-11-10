@@ -42,12 +42,19 @@ function searchQuotes(resetPage = false) {
   // Fetch current page
   const offset = (currentPage - 1) * pageSize;
   const stmt = db.prepare(
-    `SELECT rowid, COALESCE(titel,'') as titel, COALESCE(quelle,'') as quelle,
-           COALESCE(zitat,'') as zitat, COALESCE(genutzt,'') as genutzt
-      FROM quotes
-      ${where}
-     ORDER BY rank, rowid
-     LIMIT ? OFFSET ?`
+   `SELECT rowid as id,
+    COALESCE(titel,'') as _raw_titel,
+    highlight(quotes, 0, '<span class="highlight">', '</span>') as titel,
+    COALESCE(quelle,'') as _raw_quelle,
+    highlight(quotes, 1, '<span class="highlight">', '</span>') as quelle,
+    COALESCE(zitat,'') as _raw_zitat,
+    snippet(quotes, 2, '<span class="highlight">', '</span>', '…', 20) as zitat,
+    COALESCE(genutzt,'') as _raw_genutzt,
+    snippet(quotes, 3, '<span class="highlight">', '</span>', '…', 20) as genutzt
+  FROM quotes
+    ${where}
+    ORDER BY rank, rowid
+    LIMIT ? OFFSET ?`
   );
   stmt.bind([...params, pageSize, offset]);
 

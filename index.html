@@ -134,27 +134,32 @@
       <input type="hidden" id="detailId">
       <div class="grid cols-2">
         <div>
-          <label for="detailTitle">Titel</label>
-          <input type="text" id="detailTitle">
+          <label for="detailTitleDisplay">Titel</label>
+          <div id="detailTitleDisplay" class="detail-display" style="font-weight:700"></div>
+          <input type="text" id="detailTitle" class="edit-mode" style="display:none;">
         </div>
         <div>
-          <label for="detailSource">Quelle</label>
-          <input type="text" id="detailSource">
+          <label for="detailSourceDisplay">Quelle</label>
+          <div id="detailSourceDisplay" class="detail-display"></div>
+          <input type="text" id="detailSource" class="edit-mode" style="display:none;">
         </div>
       </div>
       <div class="grid cols-1" style="margin-top:8px;">
         <div>
-          <label for="detailText">Zitat</label>
-          <textarea id="detailText" rows="10"></textarea>
+          <label for="detailTextDisplay">Zitat</label>
+          <div id="detailTextDisplay" class="detail-display truncate" style="min-height:80px;"></div>
+          <textarea id="detailText" rows="10" class="edit-mode" style="display:none;"></textarea>
         </div>
         <div>
-          <label for="detailUsed">Genutzt</label>
-          <textarea id="detailUsed" rows="10"></textarea>
+          <label for="detailUsedDisplay">Genutzt</label>
+          <div id="detailUsedDisplay" class="detail-display truncate muted" style="min-height:80px;"></div>
+          <textarea id="detailUsed" rows="10" class="edit-mode" style="display:none;"></textarea>
         </div>
       </div>
       <div style="margin-top:12px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <button class="btn primary" id="saveDetailBtn">Änderungen speichern</button>
+          <button class="btn" id="editDetailBtn">Bearbeiten</button>
+          <button class="btn primary edit-mode" id="saveDetailBtn" style="display:none;">Änderungen speichern</button>
           <button class="btn danger" id="deleteDetailBtn">Zitat löschen</button>
         </div>     
       </div>
