@@ -26,7 +26,7 @@
 
 
     .app {
-      max-width: 1100px; margin: 24px auto; padding: 0 16px 80px;
+      max-width: 1700px; margin: 24px auto; padding: 0 16px 80px;
     }
 
     /* Topbar */
@@ -36,7 +36,7 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65) 70%, rgba(255,255,255,0));
       border-bottom: 1px solid var(--border);
     }
-    .topbar-inner { display:flex; align-items:center; gap:12px; padding:12px 16px; max-width:1100px; margin:0 auto; }
+    .topbar-inner { display:flex; align-items:center; gap:12px; padding:12px 16px; max-width:1700px; margin:0 auto; }
     .brand { font-weight: 700; letter-spacing: .3px; font-size: 18px; margin-right: auto; color: #0f172a; }
 
     /* Buttons & inputs */
@@ -133,14 +133,33 @@
     }
     textarea { resize: vertical; }
 
-    /* Table */
-    table { width: 100%; border-collapse: collapse; }
+   /* Table */
+   table { width: 100%; border-collapse: collapse; }
+   /* Make results table use fixed layout so column widths can be controlled by <col> elements. We only apply this
+     to the main results table to avoid unexpected behavior elsewhere. */
+   #resultsTable { table-layout: fixed; }
     thead th {
       text-align:left; font-size: 12px; color: var(--muted); font-weight: 700;
       border-bottom: 1px solid var(--border); padding: 10px; position: sticky; top: 0;
       background: #f8fafc; /* light header */
       backdrop-filter: blur(2px);
     }
+
+    /* Resizer handle inside table header */
+    .col-resizer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 20;
+      /* make it easy to grab while visually subtle */
+      background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.04));
+      touch-action: none;
+    }
+    thead th { position: sticky; }
+    thead th { box-sizing: border-box; }
     tbody td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
     tbody tr:hover { background: rgba(15, 23, 42, 0.035); } /* subtle slate tint */
     .col-actions { width: 1%; white-space: nowrap; }

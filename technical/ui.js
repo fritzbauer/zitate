@@ -95,13 +95,13 @@ function renderResults(rows) {
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
         updateSelectedCounter();
         $('#selectAllCheckbox').checked = true;
-      };
+      };*/
       $('#clearPageBtn').onclick = () => {
-        for (const id of rowsIds) selectedIds.delete(id);
+        for (const id of selectedIds) selectedIds.delete(id);
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         updateSelectedCounter();
         $('#selectAllCheckbox').checked = false;
-      };*/
+      };
     }
 
     function updatePagination() {
@@ -297,4 +297,85 @@ function renderResults(rows) {
           enterDetailEditMode();
         }
       });
+
+      // Make table columns resizable by adding small draggable handles to each header.
+      // This function uses <colgroup> / <col> to set widths so cells resize consistently.
+      function makeColumnsResizable(tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        table.style.tableLayout = 'fixed';
+        let colgroup = table.querySelector('colgroup');
+        const thead = table.querySelector('thead');
+        const ths = thead ? Array.from(thead.querySelectorAll('th')) : [];
+
+        if (!colgroup) {
+          colgroup = document.createElement('colgroup');
+          ths.forEach(() => colgroup.appendChild(document.createElement('col')));
+          table.insertBefore(colgroup, table.firstChild);
+        } else {
+          // Ensure colgroup contains as many cols as headers
+          while (colgroup.children.length < ths.length) colgroup.appendChild(document.createElement('col'));
+        }
+        const cols = Array.from(colgroup.querySelectorAll('col'));
+
+        ths.forEach((th, i) => {
+          // Avoid adding multiple resizers
+          if (th.querySelector('.col-resizer')) return;
+          th.style.position = th.style.position || 'sticky';
+          th.style.boxSizing = 'border-box';
+          const res = document.createElement('div');
+          res.className = 'col-resizer';
+          res.dataset.col = String(i);
+          th.appendChild(res);
+          res.addEventListener('mousedown', initDrag);
+          res.addEventListener('touchstart', function (ev) { initDrag.call(this, ev.touches[0]); }, { passive: false });
+        });
+
+        let startX = 0;
+        let startWidth = 0;
+        let currentCol = null;
+
+        function initDrag(e) {
+          e.preventDefault();
+          const idx = Number(this.dataset.col);
+          currentCol = cols[idx];
+          startX = e.clientX;
+          startWidth = currentCol.getBoundingClientRect().width;
+          document.addEventListener('mousemove', doDrag);
+          document.addEventListener('mouseup', stopDrag);
+          document.addEventListener('touchmove', touchMove, { passive: false });
+          document.addEventListener('touchend', stopDrag);
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+        }
+
+        function doDrag(e) {
+          if (!currentCol) return;
+          const dx = e.clientX - startX;
+          const newW = Math.max(30, startWidth + dx);
+          currentCol.style.width = newW + 'px';
+        }
+
+        function touchMove(e) {
+          if (!currentCol) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          const dx = touch.clientX - startX;
+          const newW = Math.max(30, startWidth + dx);
+          currentCol.style.width = newW + 'px';
+        }
+
+        function stopDrag() {
+          document.removeEventListener('mousemove', doDrag);
+          document.removeEventListener('mouseup', stopDrag);
+          document.removeEventListener('touchmove', touchMove);
+          document.removeEventListener('touchend', stopDrag);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          currentCol = null;
+        }
+      }
+
+      // initialize resizers for the results table
+      makeColumnsResizable('resultsTable');
     });

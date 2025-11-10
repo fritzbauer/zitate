@@ -100,10 +100,10 @@ function exportSelectedAsRtf() {
   // Plain text fallback with simple formatting
   const textFallback = rows.map(q => {
     const parts = [];
-    if (q.titel) parts.push(`*${q.titel}*`);
-    if (q.quelle) parts.push(`_${q.quelle}_`);
-    if (q.zitat) parts.push(q.zitat);
-    if (q.genutzt) parts.push(`(Genutzt: ${q.genutzt})`);
+    if (q.titel) parts.push(`*Titel:* ${q.titel}`);
+    if (q.quelle) parts.push(`*Quelle:* _${q.quelle}_`);
+    if (q.zitat) parts.push(`*Zitat:* ${q.zitat}`);
+    if (q.genutzt) parts.push(`*Genutzt:* ${q.genutzt}`);
     return parts.join('\n') + '\n';
   }).join('\n');
 
