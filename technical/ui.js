@@ -58,20 +58,21 @@ function renderResults(rows) {
   const tdTitle = document.createElement('td');
   // titel here contains highlighted HTML from FTS5; preserve line breaks
   tdTitle.innerHTML = `<div style="font-weight:700">${formatHighlightedHtml(row.titel)}</div>`;
-        tr.appendChild(tdTitle);
+    tr.appendChild(tdTitle);
 
-        const tdQuelle = document.createElement('td');
+    const tdZitat = document.createElement('td');
+  // zitat uses snippet() in list; preserve line breaks
+  tdZitat.innerHTML = `<div class="truncate">${formatHighlightedHtml(row.snippet_zitat)}</div>`;
+    tr.appendChild(tdZitat);
+
+    const tdQuelle = document.createElement('td');
   // quelle may contain highlight markup; preserve line breaks
   tdQuelle.innerHTML = formatHighlightedHtml(row.quelle);
-        tr.appendChild(tdQuelle);
+    tr.appendChild(tdQuelle);
 
-        const tdZitat = document.createElement('td');
-  tdZitat.innerHTML = `<div class="truncate">${formatHighlightedHtml(row.zitat)}</div>`;
-        tr.appendChild(tdZitat);
-
-        const tdGenutzt = document.createElement('td');
-  tdGenutzt.innerHTML = `<div class="truncate muted">${formatHighlightedHtml(row.genutzt)}</div>`;
-        tr.appendChild(tdGenutzt);
+    const tdGenutzt = document.createElement('td');
+  tdGenutzt.innerHTML = `<div class="truncate muted">${formatHighlightedHtml(row.snippet_genutzt)}</div>`;
+    tr.appendChild(tdGenutzt);
 
         frag.appendChild(tr);
       });
@@ -129,45 +130,16 @@ function renderResults(rows) {
 
       // Set id
       $('#detailId').value = quote.id;
-      // Try to fetch full highlighted content from the DB (so details show full context,
-      // while the list uses FTS5 snippet()). If that fails, fall back to the list row values.
-      let full = null;
-      try {
-        if (db) {
-          const s = db.prepare(
-            `SELECT COALESCE(titel,'') as _raw_titel, COALESCE(quelle,'') as _raw_quelle,
-                    COALESCE(zitat,'') as _raw_zitat, COALESCE(genutzt,'') as _raw_genutzt,
-                    highlight(quotes, 0, '<span class="highlight">', '</span>') as full_titel,
-                    highlight(quotes, 1, '<span class="highlight">', '</span>') as full_quelle,
-                    highlight(quotes, 2, '<span class="highlight">', '</span>') as full_zitat,
-                    highlight(quotes, 3, '<span class="highlight">', '</span>') as full_genutzt
-               FROM quotes
-              WHERE rowid = ? AND DeletedDateTime IS NULL`
-          );
-          s.bind([quote.id]);
-          if (s.step()) full = s.getAsObject();
-          s.free();
-        }
-      } catch (e) {
-        console.error('Failed to fetch full highlighted detail:', e);
-      }
+      $('#detailTitleDisplay').innerHTML = formatHighlightedHtml(quote.titel || '');
+      $('#detailSourceDisplay').innerHTML = formatHighlightedHtml(quote.quelle || '');
+      $('#detailTextDisplay').innerHTML = formatHighlightedHtml(quote.zitat || '');
+      $('#detailUsedDisplay').innerHTML = formatHighlightedHtml(quote.genutzt || '');
+      // Populate edit inputs with raw values
+      $('#detailTitle').value = quote._raw_titel || '';
+      $('#detailSource').value = quote._raw_quelle || '';
+      $('#detailText').value = quote._raw_zitat || '';
+      $('#detailUsed').value = quote._raw_genutzt || '';
 
-      const displayTitle = (full && full.full_titel) ? full.full_titel : quote.titel || '';
-      const displayQuelle = (full && full.full_quelle) ? full.full_quelle : quote.quelle || '';
-      const displayZitat = (full && full.full_zitat) ? full.full_zitat : quote.zitat || '';
-      const displayGenutzt = (full && full.full_genutzt) ? full.full_genutzt : quote.genutzt || '';
-
-      // Display highlighted HTML in display divs (preserve line breaks)
-      $('#detailTitleDisplay').innerHTML = formatHighlightedHtml(displayTitle);
-      $('#detailSourceDisplay').innerHTML = formatHighlightedHtml(displayQuelle);
-      $('#detailTextDisplay').innerHTML = formatHighlightedHtml(displayZitat);
-      $('#detailUsedDisplay').innerHTML = formatHighlightedHtml(displayGenutzt);
-
-      // Populate edit inputs with raw values (prefer the DB-fetched raw values)
-      $('#detailTitle').value = (full && full._raw_titel) ? full._raw_titel : (quote._raw_titel || '');
-      $('#detailSource').value = (full && full._raw_quelle) ? full._raw_quelle : (quote._raw_quelle || '');
-      $('#detailText').value = (full && full._raw_zitat) ? full._raw_zitat : (quote._raw_zitat || '');
-      $('#detailUsed').value = (full && full._raw_genutzt) ? full._raw_genutzt : (quote._raw_genutzt || '');
 
       $('#detailModal').style.display = 'block';
       $('#detailExportCb').checked = selectedIds.has(quote.id);

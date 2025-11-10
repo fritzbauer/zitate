@@ -48,9 +48,11 @@ function searchQuotes(resetPage = false) {
     COALESCE(quelle,'') as _raw_quelle,
     highlight(quotes, 1, '<span class="highlight">', '</span>') as quelle,
     COALESCE(zitat,'') as _raw_zitat,
-    snippet(quotes, 2, '<span class="highlight">', '</span>', '…', 20) as zitat,
+    snippet(quotes, 2, '<span class="highlight">', '</span>', '…', 64) as snippet_zitat,
+    highlight(quotes, 2, '<span class="highlight">', '</span>') as zitat,
     COALESCE(genutzt,'') as _raw_genutzt,
-    snippet(quotes, 3, '<span class="highlight">', '</span>', '…', 20) as genutzt
+    snippet(quotes, 3, '<span class="highlight">', '</span>', '…', 50) as snippet_genutzt,
+    highlight(quotes, 3, '<span class="highlight">', '</span>') as genutzt
   FROM quotes
     ${where}
     ORDER BY rank, rowid

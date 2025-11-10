@@ -144,7 +144,7 @@
     tbody td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
     tbody tr:hover { background: rgba(15, 23, 42, 0.035); } /* subtle slate tint */
     .col-actions { width: 1%; white-space: nowrap; }
-    .truncate { display:-webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .truncate { display:-webkit-box; -webkit-line-clamp: 10; -webkit-box-orient: vertical; overflow: hidden; }
 
     .muted { color: var(--muted); font-size: 12px; }
 
@@ -266,8 +266,10 @@
 .modal-content {
   background-color: #fefefe;
   position: absolute;
-  top: 0; left: 50%; transform: translateX(-50%);
-  height: 100vh;
+  top: 5vh; left: 50%; transform: translateX(-50%);
+  /* Limit modal height to viewport and allow internal scrolling */
+  max-height: 90vh;
+  height: auto;
   width: 80vw;
   max-width: 1200px;
   border-radius: var(--radius);
@@ -275,6 +277,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  overflow: auto;
 }
 
 .close-button {
