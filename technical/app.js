@@ -42,21 +42,30 @@ function searchQuotes(resetPage = false) {
   // Fetch current page
   const offset = (currentPage - 1) * pageSize;
   const stmt = db.prepare(
-   `SELECT rowid as id,
-    COALESCE(titel,'') as _raw_titel,
-    highlight(quotes, 0, '<span class="highlight">', '</span>') as titel,
-    COALESCE(quelle,'') as _raw_quelle,
-    highlight(quotes, 1, '<span class="highlight">', '</span>') as quelle,
-    COALESCE(zitat,'') as _raw_zitat,
-    snippet(quotes, 2, '<span class="highlight">', '</span>', '…', 64) as snippet_zitat,
-    highlight(quotes, 2, '<span class="highlight">', '</span>') as zitat,
-    COALESCE(genutzt,'') as _raw_genutzt,
-    snippet(quotes, 3, '<span class="highlight">', '</span>', '…', 50) as snippet_genutzt,
-    highlight(quotes, 3, '<span class="highlight">', '</span>') as genutzt
-  FROM quotes
-    ${where}
-    ORDER BY rank, rowid
-    LIMIT ? OFFSET ?`
+   `
+    SELECT *
+    FROM (
+      SELECT rowid as id,
+        COALESCE(titel,'') as _raw_titel,
+        highlight(quotes, 0, '<span class="highlight">', '</span>') as titel,
+        COALESCE(quelle,'') as _raw_quelle,
+        highlight(quotes, 1, '<span class="highlight">', '</span>') as quelle,
+        COALESCE(zitat,'') as _raw_zitat,
+        snippet(quotes, 2, '<span class="highlight">', '</span>', '…', 64) as snippet_zitat,
+        highlight(quotes, 2, '<span class="highlight">', '</span>') as zitat,
+        COALESCE(genutzt,'') as _raw_genutzt,
+        snippet(quotes, 3, '<span class="highlight">', '</span>', '…', 50) as snippet_genutzt,
+        highlight(quotes, 3, '<span class="highlight">', '</span>') as genutzt,
+        rank
+      FROM quotes
+        ${where}
+        LIMIT ? OFFSET ?
+      
+    )
+    GROUP BY id
+    HAVING rank = MAX(rank)
+    ORDER BY rank, id
+    `
   );
   stmt.bind([...params, pageSize, offset]);
 
