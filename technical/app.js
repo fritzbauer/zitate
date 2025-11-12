@@ -63,7 +63,7 @@ function searchQuotes(resetPage = false) {
       
     )
     GROUP BY id
-    HAVING rank = MAX(rank)
+    HAVING COALESCE(rank, 0) = MAX(COALESCE(rank, 0))
     ORDER BY rank, id
     `
   );

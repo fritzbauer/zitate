@@ -22,7 +22,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
       quelle,
       zitat,
       genutzt,
-      DeletedDateTime UNINDEXED
+      DeletedDateTime UNINDEXED,
+      tokenize = 'snowball italian german english'
     );
 """
 
@@ -34,6 +35,28 @@ VALUES (?, ?, ?, ?, NULL);
 def init_db(db_path: Path) -> sqlite3.Connection:
     """Create/connect DB, apply PRAGMAs, ensure table exists."""
     conn = sqlite3.connect(db_path)
+
+    # Try to enable and load the fts5stemmer extension early so any
+    # FTS5-related functions/auxiliaries are available before creating tables.
+    try:
+        # Some builds of pysqlite/sqlite3 may not expose enable_load_extension; guard it.
+        conn.enable_load_extension(True)
+        try:
+            conn.load_extension(os.path.abspath(os.path.expanduser("./fts5stemmer.so")))
+        except Exception as e:
+            # Non-fatal: log to stderr and continue. Loading may fail if the
+            # extension isn't present or SQLite was built without loadable extensions.
+            print(f"Warning: could not load fts5stemmer.so: {e}", file=sys.stderr)
+        finally:
+            # Re-disable extension loading for safety if the API exists.
+            try:
+                conn.enable_load_extension(False)
+            except Exception:
+                pass
+    except Exception:
+        # enable_load_extension may not be available; ignore and continue.
+        pass
+
     conn.execute("PRAGMA journal_mode=WAL;")      # Better concurrency & durability
     conn.execute("PRAGMA synchronous=NORMAL;")    # Speed up inserts (still safe with WAL)
     conn.execute("PRAGMA temp_store=MEMORY;")     # Keep temp data in memory

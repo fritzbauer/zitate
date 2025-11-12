@@ -16,7 +16,8 @@ async function loadDatabase() {
       quelle,
       zitat,
       genutzt,
-      DeletedDateTime UNINDEXED
+      DeletedDateTime UNINDEXED,
+      tokenize = 'snowball italian german english'
     )`);
     
     // Set the ranking weights using BM25
