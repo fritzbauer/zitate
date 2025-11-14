@@ -154,6 +154,36 @@
       <div class="file-name" id="fileNameDisplay"></div>
     </div>
 
+    <!-- Schritt 2.5: Tokenizer Sprachen auswählen -->
+    <div class="import-section" id="tokenSection">
+      <h3>Tokenizer-Sprachen auswählen</h3>
+      <p style="color: #666; font-size: 14px; margin: 0 0 12px 0;">
+        Wählen Sie eine oder mehrere Sprachen für den Snowball-Tokenizer. Reihenfolge bestimmt die Reihenfolge im tokenize-String.
+      </p>
+      <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1 1 320px; min-width:260px;">
+          <div style="font-weight:600; margin-bottom:8px;">Verfügbare Sprachen</div>
+          <div id="availableContainer" style="border:1px solid #ddd; padding:8px; border-radius:6px; height:200px; overflow:auto; background:#fff;"></div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-secondary" id="addAllBtn">Alle hinzufügen</button>
+            <button class="btn btn-secondary" id="clearAvailableBtn">Auswahl leeren</button>
+          </div>
+        </div>
+
+        <div style="flex:1 1 320px; min-width:260px;">
+          <div style="font-weight:600; margin-bottom:8px;">Ausgewählte Sprachen (Reihenfolge kann angepasst werden)</div>
+          <ol id="selectedList" style="border:1px solid #ddd; padding:8px; border-radius:6px; min-height:120px; background:#fff;"></ol>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="btn btn-secondary" id="moveUpBtn">▲</button>
+            <button class="btn btn-secondary" id="moveDownBtn">▼</button>
+            <button class="btn btn-secondary" id="removeBtn">✖ Entfernen</button>
+            <button class="btn btn-secondary" id="clearSelectedBtn">Alle entfernen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Schritt 2: Vorschau -->
     <div class="import-section" id="previewSection" style="display: none;">
       <h3>Schritt 2: Datenvorschau</h3>
@@ -204,6 +234,111 @@
     let excelData = [];
     let db = null;
     let SQL = null;
+    // Language selection for Snowball tokenizer
+    let LANGUAGES = []; // populated from technical/snowball_languages.json if present
+    let selectedLanguages = []; // ordered list chosen by user
+    let selectedIndex = -1; // index in selectedLanguages currently highlighted
+
+    // Try to load a pre-generated languages JSON inside the workspace
+    async function loadAvailableLanguages() {
+      try {
+        const res = await fetch('technical/snowball_languages.json');
+        if (!res.ok) return;
+        LANGUAGES = await res.json();
+      } catch (e) {
+        LANGUAGES = [];
+      }
+      renderAvailable();
+    }
+
+    function renderAvailable() {
+      const cont = document.getElementById('availableContainer');
+      cont.innerHTML = '';
+      if (!LANGUAGES || LANGUAGES.length === 0) {
+        cont.innerHTML = '<div style="color:#666;">Keine lokale Sprachliste gefunden. Führen Sie ggf. <code>technical/generate_snowball_languages.sh</code> aus, oder fügen Sie Sprachen manuell hinzu.</div>';
+        return;
+      }
+      LANGUAGES.forEach(lang => {
+        const btn = document.createElement('button');
+        btn.className = 'btn secondary';
+        btn.style.margin = '4px';
+        btn.textContent = lang;
+        btn.addEventListener('click', () => addLanguage(lang));
+        cont.appendChild(btn);
+      });
+    }
+
+    function renderSelected() {
+      const ol = document.getElementById('selectedList');
+      ol.innerHTML = '';
+      selectedLanguages.forEach((lang, idx) => {
+        const li = document.createElement('li');
+        li.textContent = lang;
+        li.style.cursor = 'pointer';
+        li.dataset.index = idx;
+        if (idx === selectedIndex) {
+          li.style.background = '#e6f7ff';
+        }
+        li.addEventListener('click', () => {
+          selectedIndex = idx;
+          renderSelected();
+        });
+        ol.appendChild(li);
+      });
+    }
+
+    function addLanguage(lang) {
+      if (!lang) return;
+      if (!selectedLanguages.includes(lang)) {
+        selectedLanguages.push(lang);
+        selectedIndex = selectedLanguages.length - 1;
+        renderSelected();
+      }
+    }
+
+    function addAllLanguages() {
+      LANGUAGES.forEach(l => { if (!selectedLanguages.includes(l)) selectedLanguages.push(l); });
+      selectedIndex = selectedLanguages.length - 1;
+      renderSelected();
+    }
+
+    function clearSelected() { selectedLanguages = []; selectedIndex = -1; renderSelected(); }
+
+    function moveSelectedUp() {
+      if (selectedIndex <= 0) return;
+      const i = selectedIndex;
+      [selectedLanguages[i-1], selectedLanguages[i]] = [selectedLanguages[i], selectedLanguages[i-1]];
+      selectedIndex = i-1;
+      renderSelected();
+    }
+
+    function moveSelectedDown() {
+      if (selectedIndex < 0 || selectedIndex >= selectedLanguages.length - 1) return;
+      const i = selectedIndex;
+      [selectedLanguages[i+1], selectedLanguages[i]] = [selectedLanguages[i], selectedLanguages[i+1]];
+      selectedIndex = i+1;
+      renderSelected();
+    }
+
+    function removeSelected() {
+      if (selectedIndex < 0) return;
+      selectedLanguages.splice(selectedIndex, 1);
+      if (selectedIndex >= selectedLanguages.length) selectedIndex = selectedLanguages.length - 1;
+      renderSelected();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // wire buttons
+      document.getElementById('addAllBtn')?.addEventListener('click', () => { addAllLanguages(); });
+      document.getElementById('clearAvailableBtn')?.addEventListener('click', () => { LANGUAGES = []; renderAvailable(); });
+      document.getElementById('moveUpBtn')?.addEventListener('click', moveSelectedUp);
+      document.getElementById('moveDownBtn')?.addEventListener('click', moveSelectedDown);
+      document.getElementById('removeBtn')?.addEventListener('click', removeSelected);
+      document.getElementById('clearSelectedBtn')?.addEventListener('click', clearSelected);
+
+      // attempt to load languages JSON inside workspace
+      loadAvailableLanguages();
+    });
 
     const elements = {
       fileInput: document.getElementById('excelFileInput'),
@@ -352,13 +487,18 @@
         db = new SQL.Database();
 
         // Create FTS5 virtual table
+        // Build tokenize string from selectedLanguages (ordered). Fallback to previous defaults when empty.
+        const tokenizePart = (selectedLanguages && selectedLanguages.length)
+          ? 'snowball ' + selectedLanguages.join(' ')
+          : 'snowball italian german english';
+
         db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
           titel,
           quelle,
           zitat,
           genutzt,
           DeletedDateTime UNINDEXED,
-          tokenize = 'snowball italian german english'
+          tokenize = '${tokenizePart}'
         )`);
 
         // Insert data
