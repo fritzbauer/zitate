@@ -106,8 +106,7 @@ function updateQuote(id, quote) {
 
 // MODIFIED: deleteQuote now performs a soft delete
 function deleteQuote(id) {
-  if (!db) return;
-  if (!confirm("Dieses Zitat wirklich löschen?")) return;
+  if (!db || !id) return;
   const timestamp = new Date().toISOString();
   db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE rowid = ?`, [timestamp, id]);
   selectedIds.delete(id);

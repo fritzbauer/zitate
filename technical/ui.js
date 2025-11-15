@@ -22,6 +22,10 @@ function exitDetailEditMode() {
   document.querySelectorAll('.detail-display').forEach(el => el.style.display = 'block');
   const btn = document.getElementById('editDetailBtn');
   if (btn) { btn.textContent = 'Bearbeiten'; btn.dataset.editing = '0'; }
+  // Show navigation and delete buttons that might have been hidden for new quotes
+  document.getElementById('prevQuoteBtn').style.display = '';
+  document.getElementById('nextQuoteBtn').style.display = '';
+  document.getElementById('deleteDetailBtn').style.display = '';
 }
 
 function renderResults(rows) {
@@ -140,8 +144,14 @@ function renderResults(rows) {
       $('#detailText').value = quote._raw_zitat || '';
       $('#detailUsed').value = quote._raw_genutzt || '';
 
-
       $('#detailModal').style.display = 'block';
+      
+      // Show "Für Export markieren" checkbox and navigation buttons for existing quotes
+      document.querySelector('.export-check').style.display = 'block';
+      $('#prevQuoteBtn').style.display = 'block';
+      $('#nextQuoteBtn').style.display = 'block';
+      $('#deleteDetailBtn').style.display = 'block';
+      
       $('#detailExportCb').checked = selectedIds.has(quote.id);
 
       // Ensure we start in display (non-edit) mode
@@ -149,6 +159,40 @@ function renderResults(rows) {
 
       $('#prevQuoteBtn').disabled = currentIndex === 0;
       $('#nextQuoteBtn').disabled = currentIndex === currentResults.length - 1;
+    }
+
+    function openDetailViewForNewQuote() {
+      if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
+      // Clear all fields
+      $('#detailId').value = '';
+      $('#detailTitleDisplay').innerHTML = '';
+      $('#detailSourceDisplay').innerHTML = '';
+      $('#detailTextDisplay').innerHTML = '';
+      $('#detailUsedDisplay').innerHTML = '';
+      $('#detailTitle').value = '';
+      $('#detailSource').value = '';
+      $('#detailText').value = '';
+      $('#detailUsed').value = '';
+      
+      // Open modal in edit mode
+      $('#detailModal').style.display = 'block';
+      
+      // Hide "Für Export markieren" checkbox for new quotes
+      document.querySelector('.export-check').style.display = 'none';
+      
+      enterDetailEditMode();
+      
+      // Hide navigation buttons since we don't have results to navigate
+      $('#prevQuoteBtn').disabled = true;
+      $('#nextQuoteBtn').disabled = true;
+      $('#prevQuoteBtn').style.display = 'none';
+      $('#nextQuoteBtn').style.display = 'none';
+      
+      // Update delete button to be hidden (can't delete non-existent quote)
+      $('#deleteDetailBtn').style.display = 'none';
+      
+      // Focus on first field
+      $('#detailTitle').focus();
     }
 
     // ---- Event bindings ----
@@ -202,18 +246,43 @@ function renderResults(rows) {
       });
 
       $('#saveDetailBtn').addEventListener('click', async () => {
-        // Save edits from edit-mode inputs
-        const id = parseInt($('#detailId').value, 10);
-        const quoteObj = {
-          titel: $('#detailTitle').value,
-          quelle: $('#detailSource').value,
-          zitat: $('#detailText').value,
-          genutzt: $('#detailUsed').value
-        };
-        await updateQuote(id, quoteObj);
+        const detailId = $('#detailId').value;
+        
+        if (!detailId) {
+          // New quote - add it via database
+          const titel = $('#detailTitle').value.trim();
+          const quelle = $('#detailSource').value.trim();
+          const zitat = $('#detailText').value.trim();
+          const genutzt = $('#detailUsed').value.trim();
+          
+          if (!titel || !quelle || !zitat) {
+            alert("Titel, Quelle und Zitat sind erforderlich.");
+            return;
+          }
+          
+          // Insert new quote
+          db.run(
+            `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
+             VALUES (?, ?, ?, ?, NULL)`,
+            [titel, quelle, zitat, genutzt]
+          );
+          await saveDatabase();
+        } else {
+          // Existing quote - update it
+          const id = parseInt(detailId, 10);
+          const quoteObj = {
+            titel: $('#detailTitle').value,
+            quelle: $('#detailSource').value,
+            zitat: $('#detailText').value,
+            genutzt: $('#detailUsed').value
+          };
+          await updateQuote(id, quoteObj);
+        }
+        
         // After saving, refresh and show updated highlighted content
         modal.style.display = 'none';
-        searchQuotes(); // Refresh the list
+        currentPage = 1;
+        await searchQuotes(true);
       });
 
       $('#deleteDetailBtn').addEventListener('click', async () => {
@@ -241,9 +310,10 @@ function renderResults(rows) {
       });
 
       $('#openBtn').addEventListener('click', loadDatabase);
+      $('#newQuoteBtn').addEventListener('click', openDetailViewForNewQuote);
       //$('#saveBtn').addEventListener('click', saveDatabase);
       //$('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
-      $('#addQuoteBtn').addEventListener('click', addQuote);
+      //$('#addQuoteBtn').addEventListener('click', addQuote);
       //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
       $('#exportRtfBtn').addEventListener('click', exportSelectedAsRtf);
       $('#prevPageBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; searchQuotes(); } });
