@@ -1,7 +1,7 @@
 let db;
 let fileHandle;
 let currentPage = 1;
-let pageSize = 20;
+let pageSize = 100;
 let totalResults = 0;
 let selectedIds = new Set();
 let lastSearchTerm = "";

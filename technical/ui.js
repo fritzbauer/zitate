@@ -320,12 +320,7 @@ function renderResults(rows) {
       $('#nextPageBtn').addEventListener('click', () => {
         const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
         if (currentPage < totalPages) { currentPage++; searchQuotes(); }
-      });
-      $('#pageSize').addEventListener('change', () => {
-        pageSize = parseInt($('#pageSize').value, 10) || 20;
-        localStorage.setItem('quotes_pageSize', String(pageSize));
-        currentPage = 1; searchQuotes();
-      });
+      });  
       $('#searchInput').addEventListener('input', debounce(() => searchQuotes(true), 250));
       $('#selectAllCheckbox').addEventListener('change', () => {
         const tbody = $('#resultsTable tbody');

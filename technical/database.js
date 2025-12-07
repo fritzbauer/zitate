@@ -23,10 +23,6 @@ async function loadDatabase() {
     // Set the ranking weights using BM25
     db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
 
-    // Load last pageSize from localStorage
-    const savedSize = localStorage.getItem('quotes_pageSize');
-    if (savedSize) { pageSize = parseInt(savedSize, 10) || 20; $('#pageSize').value = String(pageSize); }
-
     // Do initial search
     await searchQuotes(true);
   } catch (e) {

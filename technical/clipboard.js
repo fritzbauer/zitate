@@ -20,9 +20,9 @@ function buildHtml(quotes) {
     const genutzt = htmlEscape(q.genutzt || '');
 
     if (title) parts.push(`<h3 style="margin:0 0 4px 0">${nlToBr(title)}</h3>`);
-    if (quelle) parts.push(`<div style="font-style:italic;color:#444;margin-bottom:6px">${nlToBr(quelle)}</div>`);
+    if (quelle) parts.push(`<div style="font-style:italic;color:#444;margin-bottom:6px">Quelle: ${nlToBr(quelle)}</div>`);
     if (zitat) parts.push(`<blockquote style="margin:0 0 6px 0;padding-left:10px;border-left:3px solid #ddd">${nlToBr(zitat)}</blockquote>`);
-    if (genutzt) parts.push(`<div style="color:#666;font-size:0.9em;margin-bottom:8px">${nlToBr(genutzt)}</div>`);
+    if (genutzt) parts.push(`<div style="color:#666;font-size:0.9em;margin-bottom:8px">Genutzt: ${nlToBr(genutzt)}</div>`);
     parts.push('<hr style="border:none;border-top:1px solid #eee;margin:8px 0">');
   }
   parts.push('</div>');
@@ -35,7 +35,7 @@ async function copyHtmlToClipboard(htmlString, plainTextFallback) {
       const blob = new Blob([htmlString], { type: 'text/html' });
       const item = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([plainTextFallback], { type: 'text/plain' }) });
       await navigator.clipboard.write([item]);
-      alert('Markierte Zitate wurden in die Zwischenablage kopiert.');
+      //alert('Markierte Zitate wurden in die Zwischenablage kopiert.');
       return;
     } catch (err) {
       console.error('HTML clipboard failed:', err);
