@@ -7,8 +7,27 @@
   <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.js"></script>-->
   <link rel="stylesheet" href="technical/styles.css">
   <link rel="icon" href="technical/favicon.ico" type="image/x-icon">
+  <link rel="manifest" href="manifest.json">
+  <!-- PWA Icons -->
+  <link rel="apple-touch-icon" sizes="72x72" href="technical/icons/icon-72.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="technical/icons/icon-144.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="technical/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="256x256" href="technical/icons/icon-256.png">
+  <link rel="apple-touch-icon" sizes="384x384" href="technical/icons/icon-384.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="technical/icons/icon-512.png">
 </head>
 <body>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          // Registrierung erfolgreich
+        }, function(err) {
+          console.warn('ServiceWorker registration failed:', err);
+        });
+      });
+    }
+  </script>
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">🗂️ Zitate‑Datenbank</div>
@@ -98,24 +117,24 @@
       <input type="hidden" id="detailId">
       <div class="grid cols-2">
         <div>
-          <label for="detailTitleDisplay">Titel</label>
+          <label for="detailTitle">Titel</label>
           <div id="detailTitleDisplay" class="detail-display" style="font-weight:700"></div>
           <input type="text" id="detailTitle" class="edit-mode" style="display:none;">
         </div>
         <div>
-          <label for="detailSourceDisplay">Quelle</label>
+          <label for="detailSource">Quelle</label>
           <div id="detailSourceDisplay" class="detail-display"></div>
           <input type="text" id="detailSource" class="edit-mode" style="display:none;">
         </div>
       </div>
       <div class="grid cols-1" style="margin-top:8px;">
         <div>
-          <label for="detailTextDisplay">Zitat</label>
+          <label for="detailText">Zitat</label>
           <div id="detailTextDisplay" class="detail-display truncate" style="min-height:80px;"></div>
           <textarea id="detailText" rows="10" class="edit-mode" style="display:none;"></textarea>
         </div>
         <div>
-          <label for="detailUsedDisplay">Genutzt</label>
+          <label for="detailUsed">Genutzt</label>
           <div id="detailUsedDisplay" class="detail-display truncate muted" style="min-height:80px;"></div>
           <textarea id="detailUsed" rows="10" class="edit-mode" style="display:none;"></textarea>
         </div>

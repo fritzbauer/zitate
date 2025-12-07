@@ -3,7 +3,7 @@
  */
 function buildSearchWhere(term) {
   if (!term || !term.trim()) {
-    return { where: "WHERE DeletedDateTime IS NULL", params: [] };
+    return { where: "WHERE DeletedDateTime IS NULL", params: []};
   }
 
   // Use FTS5 MATCH with the search term as is

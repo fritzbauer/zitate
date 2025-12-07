@@ -59,12 +59,12 @@ function searchQuotes(resetPage = false) {
         rank
       FROM quotes
         ${where}
-        LIMIT ? OFFSET ?
-      
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?        
     )
     GROUP BY id
     HAVING COALESCE(rank, 0) = MAX(COALESCE(rank, 0))
-    ORDER BY rank, id
+    ORDER BY rank, id DESC
     `
   );
   stmt.bind([...params, pageSize, offset]);
