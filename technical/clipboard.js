@@ -11,20 +11,34 @@ function nlToBr(s) {
 }
 
 function buildHtml(quotes) {
-  // Build a compact HTML fragment suitable for clipboard 'text/html'.
-  const parts = ['<div class="export-quotes">'];
+  // Build an HTML table with specified column widths
+  const parts = [
+    '<div class="export-quotes">',
+    '<table style="border-collapse:collapse;width:100%;border:1px solid #bbb">',
+    '<thead>',
+    '<tr>',
+    '<th style="width:20%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Titel</th>',
+    '<th style="width:10%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Quelle</th>',
+    '<th style="width:60%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Zitat</th>',
+    '<th style="width:10%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Genutzt</th>',
+    '</tr>',
+    '</thead>',
+    '<tbody>'
+  ];
   for (const q of quotes) {
     const title = htmlEscape(q.titel || '');
     const quelle = htmlEscape(q.quelle || '');
     const zitat = htmlEscape(q.zitat || '');
     const genutzt = htmlEscape(q.genutzt || '');
-
-    if (title) parts.push(`<h3 style="margin:0 0 4px 0">${nlToBr(title)}</h3>`);
-    if (quelle) parts.push(`<div style="font-style:italic;color:#444;margin-bottom:6px">Quelle: ${nlToBr(quelle)}</div>`);
-    if (zitat) parts.push(`<blockquote style="margin:0 0 6px 0;padding-left:10px;border-left:3px solid #ddd">${nlToBr(zitat)}</blockquote>`);
-    if (genutzt) parts.push(`<div style="color:#666;font-size:0.9em;margin-bottom:8px">Genutzt: ${nlToBr(genutzt)}</div>`);
-    parts.push('<hr style="border:none;border-top:1px solid #eee;margin:8px 0">');
+    parts.push('<tr>');
+    parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(title)}</td>`);
+    parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;font-style:italic;color:#444">${nlToBr(quelle)}</td>`);
+    parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(zitat)}</td>`);
+    parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;color:#666;font-size:0.9em">${nlToBr(genutzt)}</td>`);
+    parts.push('</tr>');
   }
+  parts.push('</tbody>');
+  parts.push('</table>');
   parts.push('</div>');
   return parts.join('\n');
 }
