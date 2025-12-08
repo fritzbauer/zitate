@@ -184,6 +184,11 @@
       </div>
     </div>
 
+    <div style="margin-top:24px; text-align:center;">
+      <button class="btn primary" id="createEmptyDbBtn" style="font-size:16px; padding:12px 24px;">
+        🗃️ Leere Datenbank mit gewählten Sprachen erstellen
+      </button>
+    </div>
 
     <!-- Schritt 2: Vorschau -->
     <div class="import-section" id="previewSection" style="display: none;">
@@ -336,7 +341,9 @@
       document.getElementById('moveDownBtn')?.addEventListener('click', moveSelectedDown);
       document.getElementById('removeBtn')?.addEventListener('click', removeSelected);
       document.getElementById('clearSelectedBtn')?.addEventListener('click', clearSelected);
-
+      document.getElementById('createEmptyDbBtn')?.addEventListener('click', async () => {
+        await createEmptyDatabase();
+      });
       // attempt to load languages JSON inside workspace
       loadAvailableLanguages();
     });
@@ -390,6 +397,7 @@
         elements.fileNameDisplay.textContent = `Datei: ${file.name}`;
         showStatus(`Lese Datei: ${file.name}...`, 'info');
 
+     
         const arrayBuffer = await file.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -410,6 +418,11 @@
           showStatus('Excel-Datei ist leer.', 'error');
           return;
         }
+
+        // Button für leere DB ausblenden
+        const emptyDbBtn = document.getElementById('createEmptyDbBtn');
+        if (emptyDbBtn) emptyDbBtn.style.display = 'none';
+
 
         // Show preview
         showPreview();
@@ -472,6 +485,44 @@
         importBtn.textContent = '▶ Daten importieren';
         importBtn.addEventListener('click', startImport);
         elements.previewSection.appendChild(importBtn);
+      }
+    }
+
+    // Leere Datenbank mit gewählten Sprachen erstellen
+    async function createEmptyDatabase() {
+      try {
+        await initSQL();
+        db = new SQL.Database();
+        // Build tokenize string from selectedLanguages (ordered). Fallback zu Defaults wenn leer
+        const tokenizePart = (selectedLanguages && selectedLanguages.length)
+          ? 'snowball ' + selectedLanguages.join(' ')
+          : 'snowball italian german english';
+        db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
+          titel,
+          quelle,
+          zitat,
+          genutzt,
+          DeletedDateTime UNINDEXED,
+          tokenize = '${tokenizePart}'
+        )`);
+        // BM25 Ranking Settings
+        db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
+        db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
+        db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+        // Ergebnis anzeigen
+        elements.resultSection.style.display = 'block';
+        elements.resultMessage.innerHTML = `
+          <div class="status-message success">
+            🗃️ Leere Datenbank erfolgreich erstellt!<br><br>
+            <strong>FTS5-Tabelle</strong> mit gewählten Sprachen<br>
+            <strong>BM25-Ranking</strong> konfiguriert<br>
+            <strong>Datenbank optimiert</strong>
+          </div>
+        `;
+        showStatus('Leere Datenbank ist bereit zum Download.', 'success');
+      } catch (error) {
+        showStatus(`Fehler beim Erstellen der leeren Datenbank: ${error.message}`, 'error');
+        console.error(error);
       }
     }
 
