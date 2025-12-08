@@ -1,27 +1,27 @@
 const CACHE_NAME = 'zitate-pwa-v1';
 const OFFLINE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  'index.html',
+  'manifest.json',
   // technical files
-  '/technical/app.js',
-  '/technical/clipboard.js',
-  '/technical/database.js',
-  '/technical/search_logic.js',
-  '/technical/snowball_languages.json',
-  '/technical/sql-wasm.js',
-  '/technical/sql-wasm.wasm',
-  '/technical/styles.css',
-  '/technical/ui.js',
+  'technical/app.js',
+  'technical/clipboard.js',
+  'technical/database.js',
+  'technical/search_logic.js',
+  'technical/snowball_languages.json',
+  'technical/sql-wasm.js',
+  'technical/sql-wasm.wasm',
+  'technical/styles.css',
+  'technical/ui.js',
   // icons
-  '/technical/icons/icon-72.png',
-  '/technical/icons/icon-144.png',
-  '/technical/icons/icon-192.png',
-  '/technical/icons/icon-256.png',
-  '/technical/icons/icon-384.png',
-  '/technical/icons/icon-512.png',
-  '/technical/icons/icon.png',
-  '/technical/favicon.ico'
+  'technical/icons/icon-72.png',
+  'technical/icons/icon-144.png',
+  'technical/icons/icon-192.png',
+  'technical/icons/icon-256.png',
+  'technical/icons/icon-384.png',
+  'technical/icons/icon-512.png',
+  'technical/icons/icon.png',
+  'technical/favicon.ico'
 ];
 
 self.addEventListener('install', event => {
