@@ -40,6 +40,27 @@ async function saveDatabase() {
   //alert("Datenbank gespeichert.");
 }
 
+function runMaintenanceIfNeeded() {
+  if (!db) return;
+
+  let quoteCount = 0;
+  const stmt = db.prepare(
+    `SELECT COUNT(*) as c
+     FROM quotes
+     WHERE titel IS NOT NULL OR quelle IS NOT NULL OR zitat IS NOT NULL OR genutzt IS NOT NULL`
+  );
+
+  if (stmt.step()) {
+    quoteCount = Number(stmt.getAsObject().c) || 0;
+  }
+  stmt.free();
+
+  if (quoteCount > 0 && quoteCount % 50 === 0) {
+    db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
+    db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+  }
+}
+
 // ---- NEW: Function to drop the table ----
 async function dropTable() {
     if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
@@ -77,6 +98,8 @@ function addQuote() {
      VALUES (?, ?, ?, ?, NULL)`,
     [titel, quelle, zitat, genutzt]
   );
+
+  runMaintenanceIfNeeded();
 
   // Reset form
   $('#quoteTitle').value = '';

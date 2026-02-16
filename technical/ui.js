@@ -266,6 +266,7 @@ function renderResults(rows) {
              VALUES (?, ?, ?, ?, NULL)`,
             [titel, quelle, zitat, genutzt]
           );
+          runMaintenanceIfNeeded();
           await saveDatabase();
         } else {
           // Existing quote - update it
