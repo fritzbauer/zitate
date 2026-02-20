@@ -5,6 +5,8 @@
         "/^bash host\\.sh$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "git add": true,
+        "git commit": true
     }
 }

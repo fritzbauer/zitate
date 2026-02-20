@@ -328,6 +328,18 @@ function renderResults(rows) {
         if (currentPage < totalPages) { currentPage++; searchQuotes(); }
       });  
       $('#searchInput').addEventListener('input', debounce(() => searchQuotes(true), 250));
+
+      // Search-all-columns checkbox: re-run search and update placeholder
+      const searchAllCb = $('#searchAllColumns');
+      if (searchAllCb) {
+        searchAllCb.addEventListener('change', () => {
+          $('#searchInput').placeholder = searchAllCb.checked
+            ? 'Suchbegriff in Titel, Quelle, Zitat oder Genutzt …'
+            : 'Suchbegriff im Titel …';
+          searchQuotes(true);
+        });
+      }
+
       $('#selectAllCheckbox').addEventListener('change', () => {
         const tbody = $('#resultsTable tbody');
         const boxes = tbody.querySelectorAll('input[type="checkbox"]');

@@ -48,7 +48,7 @@
         <div class="search-input-group">
           <label for="searchInput">🔍 Zitate suchen</label>
           <div class="search-with-help">
-            <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
+            <input type="text" id="searchInput" placeholder="Suchbegriff im Titel …" />
             <div class="tooltip-container">
               <span class="help-icon" id="helpIcon">?</span>
               <div class="tooltip" id="helpTooltip">
@@ -60,12 +60,18 @@
       <li>Klammern: Gruppiere Bedingungen → (Apfel OR Banane) AND Obst</li>
       <li>Phrasen: Suche nach exakten Wortgruppen → "bester Apfel"</li>
       <li>Suche nach Wortanfängen → Auto* (sucht nach Automobil, Automat, Automotive, etc.)</li>
-      <li>Suche nach speziellen Feldern: titel:"Meine Suche" (andere Feldnamen: quelle, zitat, genutzt)</li>
+      <li>Suche nach speziellen Feldern (nur bei "Alle Spalten"): titel:"Meine Suche" (andere Feldnamen: quelle, zitat, genutzt)</li>
     </ul>
     💡 Groß-/Kleinschreibung ist egal. Mehrere Wörter ohne Operator werden automatisch mit AND verknüpft.
                 </div>
               </div>              
         
+          </div>
+          <div class="search-options">
+            <label class="checkbox-label" for="searchAllColumns">
+              <input type="checkbox" id="searchAllColumns" />
+              Alle Spalten durchsuchen
+            </label>
           </div>
         </div>
         <div class="spacer"></div>

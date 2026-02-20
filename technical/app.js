@@ -50,7 +50,8 @@ function searchQuotes(resetPage = false) {
   }
   lastSearchTerm = term;
 
-  const { where, params } = buildSearchWhere(term);
+  const searchAllColumns = $('#searchAllColumns') ? $('#searchAllColumns').checked : false;
+  const { where, params } = buildSearchWhere(term, searchAllColumns);
 
   // Count total matching (non-deleted) results
   let count = 0;

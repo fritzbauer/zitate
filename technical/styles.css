@@ -116,6 +116,26 @@
       min-width: 0;
     }
 
+    .search-options {
+      margin-top: 6px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
     .page-size-container {
       flex-shrink: 0;
       width: auto;

@@ -1,15 +1,20 @@
 /**
- * Builds the WHERE clause using FTS5 MATCH functionality
+ * Builds the WHERE clause using FTS5 MATCH functionality.
+ * @param {string} term - The search term entered by the user.
+ * @param {boolean} searchAllColumns - If true, search all FTS5 columns; if false, restrict to "titel" column only.
  */
-function buildSearchWhere(term) {
+function buildSearchWhere(term, searchAllColumns = false) {
   if (!term || !term.trim()) {
     return { where: "WHERE DeletedDateTime IS NULL", params: []};
   }
 
-  // Use FTS5 MATCH with the search term as is
+  const trimmed = term.trim();
+  // When searching titel only, wrap with FTS5 column filter syntax
+  const searchTerm = searchAllColumns ? trimmed : `{titel} : (${trimmed})`;
+
   return {
     where: "WHERE DeletedDateTime IS NULL AND quotes MATCH ? ",
-    params: [term.trim()]
+    params: [searchTerm]
   };
 }
 
