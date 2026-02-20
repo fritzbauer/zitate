@@ -42,6 +42,31 @@ function maybeShowManualSaveHint() {
   alert("Dieser Browser unterstützt kein direktes Speichern in die geöffnete Datei. Bitte speichern Sie Änderungen manuell über 'Datenbank speichern'.");
 }
 
+function supportsFileSystemAccessApi() {
+  return typeof window.showOpenFilePicker === 'function';
+}
+
+function updateStorageButtons() {
+  const openBtn = $('#openBtn');
+  const saveBtn = $('#saveBtn');
+  if (!openBtn || !saveBtn) return;
+
+  if (supportsFileSystemAccessApi()) {
+    openBtn.style.display = '';
+    saveBtn.style.display = 'none';
+    return;
+  }
+
+  if (!db) {
+    openBtn.style.display = '';
+    saveBtn.style.display = 'none';
+    return;
+  }
+
+  openBtn.style.display = 'none';
+  saveBtn.style.display = '';
+}
+
 function searchQuotes(resetPage = false) {
   if (!db) return;
   const term = $('#searchInput').value.trim();

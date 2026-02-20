@@ -69,6 +69,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <!-- SQL.js -->
   <script src="technical/sql-wasm.js"></script>
+  <script src="technical/db_schema.js"></script>
   <script>
     let db = null;
     let SQL = null;
@@ -89,7 +90,7 @@
     // Initialize SQL.js
     async function initSQL() {
       if (!SQL) {
-        SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
+        SQL = await getSqlRuntime();
       }
     }
 
@@ -114,6 +115,7 @@
         await initSQL();
         const buffer = await file.arrayBuffer();
         db = new SQL.Database(new Uint8Array(buffer));
+        ensureLoboscoSchema(db);
 
         showDatabaseStats();
         showPreview();

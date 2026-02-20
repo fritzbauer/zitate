@@ -270,6 +270,10 @@ function renderResults(rows) {
 
     // ---- Event bindings ----
     window.addEventListener('DOMContentLoaded', () => {
+      if (typeof updateStorageButtons === 'function') {
+        updateStorageButtons();
+      }
+
       const modal = $('#detailModal');
       const closeButton = modal.querySelector('.close-button');
 

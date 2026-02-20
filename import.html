@@ -112,6 +112,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <!-- SQL.js -->
   <script src="technical/sql-wasm.js"></script>
+  <script src="technical/db_schema.js"></script>
   <script>
     let excelData = [];
     let db = null;
@@ -243,7 +244,7 @@
     // Initialize SQL.js
     async function initSQL() {
       if (!SQL) {
-        SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
+        SQL = await getSqlRuntime();
       }
     }
 
@@ -369,22 +370,9 @@
       try {
         await initSQL();
         db = new SQL.Database();
-        // Build tokenize string from selectedLanguages (ordered). Fallback zu Defaults wenn leer
-        const tokenizePart = (selectedLanguages && selectedLanguages.length)
-          ? 'snowball ' + selectedLanguages.join(' ')
-          : 'snowball italian german english';
-        db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-          titel,
-          quelle,
-          zitat,
-          genutzt,
-          DeletedDateTime UNINDEXED,
-          tokenize = '${tokenizePart}'
-        )`);
-        // BM25 Ranking Settings
-        db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+        const tokenizePart = buildSnowballTokenizer(selectedLanguages);
+        ensureLoboscoSchema(db, { tokenize: tokenizePart });
+        applyQuotesRankingAndOptimize(db);
         // Ergebnis anzeigen
         elements.resultSection.style.display = 'block';
         elements.resultMessage.innerHTML = `
@@ -413,21 +401,8 @@
 
         // Create new database
         db = new SQL.Database();
-
-        // Create FTS5 virtual table
-        // Build tokenize string from selectedLanguages (ordered). Fallback to previous defaults when empty.
-        const tokenizePart = (selectedLanguages && selectedLanguages.length)
-          ? 'snowball ' + selectedLanguages.join(' ')
-          : 'snowball italian german english';
-
-        db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-          titel,
-          quelle,
-          zitat,
-          genutzt,
-          DeletedDateTime UNINDEXED,
-          tokenize = '${tokenizePart}'
-        )`);
+        const tokenizePart = buildSnowballTokenizer(selectedLanguages);
+        ensureLoboscoSchema(db, { tokenize: tokenizePart });
 
         // Insert data
         const totalRows = excelData.length;
@@ -447,9 +422,7 @@
         });
 
         // Apply BM25 ranking settings
-        db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+        applyQuotesRankingAndOptimize(db);
 
         elements.progressMessage.textContent = 'Datenbank wird optimiert...';
         

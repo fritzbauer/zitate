@@ -1,28 +1,10 @@
 // ---- DB init ----
 async function openDatabaseFromFile(file) {
   const buffer = await file.arrayBuffer();
-  const SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
+  const SQL = await getSqlRuntime();
   db = new SQL.Database(new Uint8Array(buffer));
 
-  db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-    titel,
-    quelle,
-    zitat,
-    genutzt,
-    DeletedDateTime UNINDEXED,
-    tokenize = 'snowball italian german english'
-  )`);
-
-  db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
-
-  // Create attachments table (separate from FTS5, stores blobs)
-  db.run(`CREATE TABLE IF NOT EXISTS attachments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    quote_rowid INTEGER NOT NULL,
-    filename TEXT NOT NULL,
-    mime_type TEXT,
-    data BLOB NOT NULL
-  )`);
+  ensureLoboscoSchema(db);
 }
 
 async function loadDatabase() {
@@ -62,9 +44,15 @@ async function loadDatabase() {
 
     // Do initial search
     await searchQuotes(true);
+    if (typeof updateStorageButtons === 'function') {
+      updateStorageButtons();
+    }
   } catch (e) {
     console.error(e);
     alert("Öffnen fehlgeschlagen oder abgebrochen.");
+    if (typeof updateStorageButtons === 'function') {
+      updateStorageButtons();
+    }
   }
 }
 
