@@ -167,14 +167,6 @@ function renderResults(rows) {
       $('#totalCount').textContent = String(totalResults);
       updateSelectedCounter();
 
-      // Helper buttons bound to current page rows
-      /*
-      $('#selectPageBtn').onclick = () => {
-        for (const id of rowsIds) selectedIds.add(id);
-        tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-        updateSelectedCounter();
-        $('#selectAllCheckbox').checked = true;
-      };*/
       $('#clearPageBtn').onclick = () => {
         for (const id of selectedIds) selectedIds.delete(id);
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -341,14 +333,7 @@ function renderResults(rows) {
             return;
           }
           
-          // Insert new quote
-          db.run(
-            `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
-             VALUES (?, ?, ?, ?, NULL)`,
-            [titel, quelle, zitat, genutzt]
-          );
-          runMaintenanceIfNeeded();
-          await saveAfterMutation();
+          await insertQuote(titel, quelle, zitat, genutzt);
         } else {
           // Existing quote - update it
           const id = parseInt(detailId, 10);
@@ -418,9 +403,6 @@ function renderResults(rows) {
           alert("Speichern fehlgeschlagen: " + e.message);
         });
       });
-      //$('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
-      //$('#addQuoteBtn').addEventListener('click', addQuote);
-      //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
       $('#exportRtfBtn').addEventListener('click', exportSelectedAsRtf);
       $('#prevPageBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; searchQuotes(); } });
       $('#nextPageBtn').addEventListener('click', () => {

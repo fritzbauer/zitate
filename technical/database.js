@@ -119,22 +119,16 @@ function runMaintenanceIfNeeded() {
   }
 }
 
-// ---- NEW: Function to drop the table ----
-async function dropTable() {
-    if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
-    if (!confirm("WARNUNG: Sind Sie sicher, dass Sie alle Zitate permanent löschen wollen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.")) {
-        return;
-    }
-    try {
-        db.run('DROP TABLE IF EXISTS quotes');
-      await saveAfterMutation();
-        alert("Die Tabelle 'quotes' wurde gelöscht.");
-        // Refresh the view, which will now be empty
-        await searchQuotes(true);
-    } catch (e) {
-        console.error(e);
-        alert("Fehler beim Löschen der Tabelle: " + e.message);
-    }
+// ---- Insert a new quote (pure DB operation) ----
+async function insertQuote(titel, quelle, zitat, genutzt) {
+  if (!db) throw new Error('Keine Datenbank geöffnet.');
+  db.run(
+    `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
+     VALUES (?, ?, ?, ?, NULL)`,
+    [titel, quelle, zitat, genutzt]
+  );
+  runMaintenanceIfNeeded();
+  await saveAfterMutation();
 }
 
 // ---- Attachments CRUD ----
@@ -192,37 +186,6 @@ function getAttachmentNames(quoteRowid) {
 }
 
 // ---- CRUD ----
-function addQuote() {
-  if (!db) { alert("Bitte zuerst eine Datenbank öffnen."); return; }
-  const titel   = $('#quoteTitle').value.trim();
-  const quelle  = $('#quoteSource').value.trim();
-  const zitat   = $('#quoteText').value.trim();
-  const genutzt = $('#quoteUsed').value.trim();
-
-  if (!titel || !quelle || !zitat) {
-    alert("Titel, Quelle und Zitat sind erforderlich.");
-    return;
-  }
-
-  db.run(
-    `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
-     VALUES (?, ?, ?, ?, NULL)`,
-    [titel, quelle, zitat, genutzt]
-  );
-
-  runMaintenanceIfNeeded();
-
-  // Reset form
-  $('#quoteTitle').value = '';
-  $('#quoteSource').value = '';
-  $('#quoteText').value = '';
-  $('#quoteUsed').value = '';
-
-  // Refresh and persist
-  currentPage = 1;
-  searchQuotes(true);
-  saveAfterMutation().catch(()=>{});
-}
 async function updateQuote(id, quote) {
   if (!db) return;
   db.run(

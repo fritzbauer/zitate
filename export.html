@@ -6,178 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="technical/styles.css">
   <link rel="icon" href="technical/favicon.ico" type="image/x-icon">
-  <style>
-    .export-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .export-section {
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .export-section h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    .file-input-wrapper {
-      position: relative;
-      display: inline-block;
-      cursor: pointer;
-      width: 100%;
-    }
-    .file-input-wrapper input[type="file"] {
-      display: none;
-    }
-    .file-input-label {
-      display: block;
-      padding: 12px 16px;
-      background: #007acc;
-      color: white;
-      border-radius: 4px;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    .file-input-label:hover {
-      background: #005a9e;
-    }
-    .file-name {
-      margin-top: 8px;
-      color: #666;
-      font-size: 14px;
-    }
-    .preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    .preview-table th,
-    .preview-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    .preview-table th {
-      background: #f0f0f0;
-      font-weight: 600;
-    }
-    .preview-table tbody tr:nth-child(even) {
-      background: #f9f9f9;
-    }
-    .status-message {
-      padding: 12px;
-      border-radius: 4px;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    .status-message.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .status-message.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    .status-message.info {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-    .export-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .export-options label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .stat-card {
-      background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-    }
-    .stat-card .stat-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--accent, #2563eb);
-    }
-    .stat-card .stat-label {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    /* Responsive adjustments for export page */
-    @media (max-width: 768px) {
-      .export-container {
-        padding: 12px;
-      }
-      .export-section {
-        padding: 12px;
-      }
-      .preview-table {
-        font-size: 12px;
-      }
-      .preview-table th,
-      .preview-table td {
-        padding: 6px;
-      }
-    }
-    @media (max-width: 480px) {
-      .export-container {
-        padding: 8px;
-      }
-      .export-section {
-        padding: 10px;
-      }
-      .stat-card .stat-value {
-        font-size: 18px;
-      }
-      .stat-card .stat-label {
-        font-size: 11px;
-      }
-      .preview-table {
-        font-size: 11px;
-      }
-      .preview-table th,
-      .preview-table td {
-        padding: 4px;
-      }
-    }
-  </style>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">📤 Zitate Excel Export</div>
-      <a href="index.html" class="btn" style="text-decoration: none;">← Zurück zur Datenbank</a>
+      <a href="index.html" class="btn back-link">← Zurück zur Datenbank</a>
     </div>
   </div>
 
-  <div class="export-container">
+  <div class="wizard-container">
     <!-- Step 1: Load Database -->
-    <div class="export-section">
+    <div class="wizard-section">
       <h3>Schritt 1: Datenbank laden</h3>
-      <p style="color: #666; font-size: 14px; margin: 0 0 12px 0;">
+      <p class="wizard-hint">
         Wählen Sie die SQLite-Datenbankdatei, die Sie exportieren möchten.
       </p>
       <div class="file-input-wrapper">
@@ -190,11 +32,11 @@
     </div>
 
     <!-- Step 2: Database Stats & Preview -->
-    <div class="export-section" id="previewSection" style="display: none;">
+    <div class="wizard-section" id="previewSection" style="display: none;">
       <h3>Schritt 2: Datenübersicht</h3>
       <div class="stats-grid" id="statsGrid"></div>
       <div style="overflow-x: auto; margin-top: 16px;">
-        <p style="color: #666; font-size: 14px; margin: 0 0 8px 0;">Vorschau (erste 10 Einträge):</p>
+        <p class="wizard-hint" style="margin-bottom: 8px;">Vorschau (erste 10 Einträge):</p>
         <table class="preview-table" id="previewTable">
           <thead></thead>
           <tbody></tbody>
@@ -204,7 +46,7 @@
     </div>
 
     <!-- Step 3: Export Options -->
-    <div class="export-section" id="exportSection" style="display: none;">
+    <div class="wizard-section" id="exportSection" style="display: none;">
       <h3>Schritt 3: Export-Optionen</h3>
       <div class="export-options">
         <label>

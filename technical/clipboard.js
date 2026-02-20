@@ -1,11 +1,5 @@
 // ---- HTML export helpers ----
-// Escape text for safe HTML insertion and preserve newlines as <br>
-function htmlEscape(str) {
-  if (str == null) return '';
-  const s = String(str);
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/\'/g, '&#39;');
-}
-
+// Convert newlines to <br> for HTML output
 function nlToBr(s) {
   return s.replace(/\r\n|\n/g, '<br>');
 }
@@ -27,10 +21,10 @@ function buildHtml(quotes) {
     '<tbody>'
   ];
   for (const q of quotes) {
-    const title = htmlEscape(q.titel || '');
-    const quelle = htmlEscape(q.quelle || '');
-    const zitat = htmlEscape(q.zitat || '');
-    const genutzt = htmlEscape(q.genutzt || '');
+    const title = escapeHTML(q.titel || '');
+    const quelle = escapeHTML(q.quelle || '');
+    const zitat = escapeHTML(q.zitat || '');
+    const genutzt = escapeHTML(q.genutzt || '');
     const attachmentNames = getAttachmentNames(q.id);
     parts.push('<tr>');
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(title)}</td>`);
@@ -38,7 +32,7 @@ function buildHtml(quotes) {
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(zitat)}</td>`);
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;color:#666;font-size:0.9em">${nlToBr(genutzt)}</td>`);
     if (attachmentNames.length > 0) {
-      parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;font-size:0.85em;color:#555">📎 ${attachmentNames.map(n => htmlEscape(n)).join(', ')}</td>`);
+      parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;font-size:0.85em;color:#555">📎 ${attachmentNames.map(n => escapeHTML(n)).join(', ')}</td>`);
     } else {
       parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb"></td>`);
     }

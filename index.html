@@ -35,8 +35,7 @@
       <button class="btn" id="saveBtn">💾&nbsp;Datenbank speichern</button>
       <button class="btn" id="newQuoteBtn">➕&nbsp;Neues Zitat</button>
       <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Kopieren</button>
-      <!--<button class="btn" id="saveBtn">💾&nbsp;Speichern</button>
-      <button id="dropTableBtn" class="btn">Drop Table</button>-->
+
     </div>
   </div>
   <input type="file" id="dbFileInput" accept=".sqlite,application/octet-stream" style="display:none;" />
@@ -76,9 +75,7 @@
         </div>
         <div class="spacer"></div>
         <div class="counter"><span id="totalCount">0</span> Treffer • Markiert: <span id="selectedCount">0</span></div>
-        <!--<button class="btn" id="selectPageBtn">Seite markieren</button>-->
         <button class="btn ghost" id="clearPageBtn">Markierung aufheben</button>
-        <!--<button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>-->
       </div>
     </div>
 
@@ -166,7 +163,7 @@
       </div>
     </div>
   </div>
-  <footer style="text-align: center; margin-top: 20px; padding: 20px; border-top: 1px solid #ccc;">
+  <footer class="app-footer">
     <a href="import.html">Zitate Excel Importer</a>
     &nbsp;|&nbsp;
     <a href="export.html">Zitate Excel Export</a>

@@ -36,6 +36,13 @@
       min-height: 98vh;
     }
 
+    .app-footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      border-top: 1px solid #ccc;
+    }
+
     #resultsCard {
       flex: 1 1 auto;
       display: flex;
@@ -138,10 +145,6 @@
 
     .page-size-container {
       flex-shrink: 0;
-      width: auto;
-    }
-    
-    .page-size-container {
       min-width: 120px;
       margin-left: auto;
     }
@@ -194,8 +197,9 @@
     thead th {
       text-align:left; font-size: 12px; color: var(--muted); font-weight: 700;
       border-bottom: 1px solid var(--border); padding: 10px; position: sticky; top: 0;
-      background: #f8fafc; /* light header */
+      background: #f8fafc;
       backdrop-filter: blur(2px);
+      box-sizing: border-box;
     }
 
     /* Resizer handle inside table header */
@@ -207,12 +211,9 @@
       height: 100%;
       cursor: col-resize;
       z-index: 20;
-      /* make it easy to grab while visually subtle */
       background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.04));
       touch-action: none;
     }
-    thead th { position: sticky; }
-    thead th { box-sizing: border-box; }
     tbody td { border-bottom: 1px solid var(--border); padding: 10px; vertical-align: top; }
     tbody tr:hover { background: rgba(15, 23, 42, 0.035); } /* subtle slate tint */
     .col-actions { width: 1%; white-space: nowrap; }
@@ -559,12 +560,6 @@
     gap: 6px;
   }
 
-  /* Import/export page containers */
-  .import-container,
-  .export-container {
-    padding: 12px;
-  }
-
   .tooltip {
     width: 280px;
     left: auto;
@@ -577,7 +572,7 @@
     right: 14px;
   }
 
-  footer {
+  .app-footer {
     padding: 12px !important;
     font-size: 14px;
   }
@@ -678,35 +673,6 @@
     font-size: 12px;
   }
 
-  /* Import/export containers */
-  .import-container,
-  .export-container {
-    padding: 8px;
-  }
-
-  .import-section,
-  .export-section {
-    padding: 12px;
-  }
-
-  /* Stats grid */
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .stat-card {
-    padding: 8px;
-  }
-
-  .stat-card .stat-value {
-    font-size: 18px;
-  }
-
-  .stat-card .stat-label {
-    font-size: 11px;
-  }
-
   /* Button actions in modal */
   .modal-content > div:last-child {
     flex-wrap: wrap;
@@ -718,7 +684,7 @@
     padding: 8px 10px;
   }
 
-  footer {
+  .app-footer {
     padding: 10px !important;
     font-size: 13px;
   }
@@ -728,5 +694,242 @@
 @media (min-width: 1280px) {
   .app {
     max-width: 1700px;
+  }
+}
+
+/* ===== SHARED WIZARD PAGE STYLES (import.html, export.html) ===== */
+
+.wizard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.wizard-section {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.wizard-section h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+  display: none;
+}
+
+.file-input-label {
+  display: block;
+  padding: 12px 16px;
+  background: #007acc;
+  color: white;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.file-input-label:hover {
+  background: #005a9e;
+}
+
+.file-name {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.preview-table th,
+.preview-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.preview-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+}
+
+.preview-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.status-message {
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.status-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.status-message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-secondary {
+  padding: 10px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-secondary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.export-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.export-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-card .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent, #2563eb);
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.wizard-hint {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.back-link {
+  text-decoration: none;
+}
+
+/* Responsive wizard pages */
+@media (max-width: 768px) {
+  .wizard-container {
+    padding: 12px;
+  }
+  .wizard-section {
+    padding: 12px;
+  }
+  .preview-table {
+    font-size: 12px;
+  }
+  .preview-table th,
+  .preview-table td {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wizard-container {
+    padding: 8px;
+  }
+  .wizard-section {
+    padding: 10px;
+  }
+  .stat-card .stat-value {
+    font-size: 18px;
+  }
+  .stat-card .stat-label {
+    font-size: 11px;
+  }
+  .preview-table {
+    font-size: 11px;
+  }
+  .preview-table th,
+  .preview-table td {
+    padding: 4px;
   }
 }
