@@ -32,12 +32,13 @@
     <div class="topbar-inner">
       <div class="brand">🗂️ Zitate‑Datenbank</div>
       <button class="btn" id="openBtn">📂&nbsp;Datenbank öffnen</button>
+      <button class="btn" id="saveBtn">💾&nbsp;Datenbank speichern</button>
       <button class="btn" id="newQuoteBtn">➕&nbsp;Neues Zitat</button>
       <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Kopieren</button>
-      <!--<button class="btn" id="saveBtn">💾&nbsp;Speichern</button>
-      <button id="dropTableBtn" class="btn">Drop Table</button>-->
+
     </div>
   </div>
+  <input type="file" id="dbFileInput" accept=".sqlite,application/octet-stream" style="display:none;" />
 
   <div class="app">
     <!-- Suche -->
@@ -46,7 +47,7 @@
         <div class="search-input-group">
           <label for="searchInput">🔍 Zitate suchen</label>
           <div class="search-with-help">
-            <input type="text" id="searchInput" placeholder="Suchbegriff in Titel, Quelle, Zitat oder Genutzt …" />
+            <input type="text" id="searchInput" placeholder="Suchbegriff im Titel …" />
             <div class="tooltip-container">
               <span class="help-icon" id="helpIcon">?</span>
               <div class="tooltip" id="helpTooltip">
@@ -58,19 +59,23 @@
       <li>Klammern: Gruppiere Bedingungen → (Apfel OR Banane) AND Obst</li>
       <li>Phrasen: Suche nach exakten Wortgruppen → "bester Apfel"</li>
       <li>Suche nach Wortanfängen → Auto* (sucht nach Automobil, Automat, Automotive, etc.)</li>
-      <li>Suche nach speziellen Feldern: titel:"Meine Suche" (andere Feldnamen: quelle, zitat, genutzt)</li>
+      <li>Suche nach speziellen Feldern (nur bei "Alle Spalten"): titel:"Meine Suche" (andere Feldnamen: quelle, zitat, genutzt)</li>
     </ul>
     💡 Groß-/Kleinschreibung ist egal. Mehrere Wörter ohne Operator werden automatisch mit AND verknüpft.
                 </div>
               </div>              
         
           </div>
+          <div class="search-options">
+            <label class="checkbox-label" for="searchAllColumns">
+              <input type="checkbox" id="searchAllColumns" />
+              Alle Spalten durchsuchen
+            </label>
+          </div>
         </div>
         <div class="spacer"></div>
         <div class="counter"><span id="totalCount">0</span> Treffer • Markiert: <span id="selectedCount">0</span></div>
-        <!--<button class="btn" id="selectPageBtn">Seite markieren</button>-->
         <button class="btn ghost" id="clearPageBtn">Markierung aufheben</button>
-        <!--<button class="btn danger" id="deleteSelectedBtn">🗑️&nbsp;Markierte löschen</button>-->
       </div>
     </div>
 
@@ -139,6 +144,16 @@
           <textarea id="detailUsed" rows="10" class="edit-mode" style="display:none;"></textarea>
         </div>
       </div>
+      <!-- Attachments Section -->
+      <div class="attachments-section" style="margin-top:12px;">
+        <label>Anhänge</label>
+        <div id="attachmentsList" class="attachments-list"></div>
+        <div class="edit-mode" style="display:none; margin-top:8px;">
+          <input type="file" id="attachmentFileInput" multiple style="display:none;">
+          <button class="btn ghost" id="addAttachmentBtn" type="button">📎&nbsp;Datei anhängen</button>
+        </div>
+      </div>
+
       <div style="margin-top:12px; display: flex; justify-content: space-between; align-items: center;">
         <div>
           <button class="btn" id="editDetailBtn">Bearbeiten</button>
@@ -148,11 +163,14 @@
       </div>
     </div>
   </div>
-  <footer style="text-align: center; margin-top: 20px; padding: 20px; border-top: 1px solid #ccc;">
+  <footer class="app-footer">
     <a href="import.html">Zitate Excel Importer</a>
+    &nbsp;|&nbsp;
+    <a href="export.html">Zitate Excel Export</a>
   </footer>
   <script src="technical/sql-wasm.js"></script>
   <script src="technical/app.js"></script>
+  <script src="technical/db_schema.js"></script>
   <script src="technical/database.js"></script>
   <script src="technical/search_logic.js"></script>
   <script src="technical/clipboard.js"></script>

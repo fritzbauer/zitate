@@ -6,144 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="technical/styles.css">
   <link rel="icon" href="technical/favicon.ico" type="image/x-icon">
-  <style>
-    .import-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .import-section {
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .import-section h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    .file-input-wrapper {
-      position: relative;
-      display: inline-block;
-      cursor: pointer;
-      width: 100%;
-    }
-    .file-input-wrapper input[type="file"] {
-      display: none;
-    }
-    .file-input-label {
-      display: block;
-      padding: 12px 16px;
-      background: #007acc;
-      color: white;
-      border-radius: 4px;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    .file-input-label:hover {
-      background: #005a9e;
-    }
-    .file-name {
-      margin-top: 8px;
-      color: #666;
-      font-size: 14px;
-    }
-    .preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    .preview-table th,
-    .preview-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    .preview-table th {
-      background: #f0f0f0;
-      font-weight: 600;
-    }
-    .preview-table tbody tr:nth-child(even) {
-      background: #f9f9f9;
-    }
-    .status-message {
-      padding: 12px;
-      border-radius: 4px;
-      margin-top: 12px;
-      font-size: 14px;
-    }
-    .status-message.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .status-message.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    .status-message.info {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-    .button-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .btn-secondary {
-      padding: 10px 16px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    .btn-secondary:hover {
-      background: #5a6268;
-    }
-    .btn-secondary:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .progress-bar {
-      width: 100%;
-      height: 24px;
-      background: #e0e0e0;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 12px;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: #28a745;
-      transition: width 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 12px;
-      font-weight: 600;
-    }
-  </style>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">📊 Zitate Excel Importer</div>
-      <a href="index.html" class="btn" style="text-decoration: none;">← Zurück zur Datenbank</a>
+      <a href="index.html" class="btn back-link">← Zurück zur Datenbank</a>
     </div>
   </div>
 
-  <div class="import-container">
+  <div class="wizard-container">
     <!-- Schritt 1: Excel auswählen -->
-    <div class="import-section">
+    <div class="wizard-section">
       <h3>Schritt 1: Excel-Datei auswählen</h3>
-      <p style="color: #666; font-size: 14px; margin: 0 0 12px 0;">
+      <p class="wizard-hint">
         Wählen Sie eine Excel-Datei mit den 4 Spalten: <strong>titel, quelle, zitat, genutzt</strong>
       </p>
       <div class="file-input-wrapper">
@@ -156,9 +32,9 @@
     </div>
 
     <!-- Schritt 2.5: Tokenizer Sprachen auswählen -->
-    <div class="import-section" id="tokenSection">
+    <div class="wizard-section" id="tokenSection">
       <h3>Tokenizer-Sprachen auswählen</h3>
-      <p style="color: #666; font-size: 14px; margin: 0 0 12px 0;">
+      <p class="wizard-hint">
         Wählen Sie eine oder mehrere Sprachen für den Snowball-Tokenizer. Reihenfolge bestimmt die Reihenfolge im tokenize-String.
       </p>
       <div style="display:flex; gap:16px; flex-wrap:wrap;">
@@ -191,9 +67,9 @@
     </div>
 
     <!-- Schritt 2: Vorschau -->
-    <div class="import-section" id="previewSection" style="display: none;">
+    <div class="wizard-section" id="previewSection" style="display: none;">
       <h3>Schritt 2: Datenvorschau</h3>
-      <p style="color: #666; font-size: 14px; margin: 0 0 12px 0;">
+      <p class="wizard-hint">
         Überprüfen Sie die importierten Daten (max. 10 Zeilen angezeigt):
       </p>
       <div style="overflow-x: auto;">
@@ -206,7 +82,7 @@
     </div>
 
     <!-- Schritt 3: Fortschritt -->
-    <div class="import-section" id="progressSection" style="display: none;">
+    <div class="wizard-section" id="progressSection" style="display: none;">
       <h3>Schritt 3: Datenbank wird erstellt</h3>
       <div class="progress-bar">
         <div class="progress-bar-fill" id="progressFill" style="width: 0%">0%</div>
@@ -215,7 +91,7 @@
     </div>
 
     <!-- Schritt 4: Ergebnis -->
-    <div class="import-section" id="resultSection" style="display: none;">
+    <div class="wizard-section" id="resultSection" style="display: none;">
       <h3>Schritt 4: Import abgeschlossen</h3>
       <div id="resultMessage"></div>
       <div class="button-group">
@@ -236,6 +112,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <!-- SQL.js -->
   <script src="technical/sql-wasm.js"></script>
+  <script src="technical/db_schema.js"></script>
   <script>
     let excelData = [];
     let db = null;
@@ -367,7 +244,7 @@
     // Initialize SQL.js
     async function initSQL() {
       if (!SQL) {
-        SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
+        SQL = await getSqlRuntime();
       }
     }
 
@@ -493,22 +370,9 @@
       try {
         await initSQL();
         db = new SQL.Database();
-        // Build tokenize string from selectedLanguages (ordered). Fallback zu Defaults wenn leer
-        const tokenizePart = (selectedLanguages && selectedLanguages.length)
-          ? 'snowball ' + selectedLanguages.join(' ')
-          : 'snowball italian german english';
-        db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-          titel,
-          quelle,
-          zitat,
-          genutzt,
-          DeletedDateTime UNINDEXED,
-          tokenize = '${tokenizePart}'
-        )`);
-        // BM25 Ranking Settings
-        db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+        const tokenizePart = buildSnowballTokenizer(selectedLanguages);
+        ensureLoboscoSchema(db, { tokenize: tokenizePart });
+        applyQuotesRankingAndOptimize(db);
         // Ergebnis anzeigen
         elements.resultSection.style.display = 'block';
         elements.resultMessage.innerHTML = `
@@ -537,21 +401,8 @@
 
         // Create new database
         db = new SQL.Database();
-
-        // Create FTS5 virtual table
-        // Build tokenize string from selectedLanguages (ordered). Fallback to previous defaults when empty.
-        const tokenizePart = (selectedLanguages && selectedLanguages.length)
-          ? 'snowball ' + selectedLanguages.join(' ')
-          : 'snowball italian german english';
-
-        db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-          titel,
-          quelle,
-          zitat,
-          genutzt,
-          DeletedDateTime UNINDEXED,
-          tokenize = '${tokenizePart}'
-        )`);
+        const tokenizePart = buildSnowballTokenizer(selectedLanguages);
+        ensureLoboscoSchema(db, { tokenize: tokenizePart });
 
         // Insert data
         const totalRows = excelData.length;
@@ -571,9 +422,7 @@
         });
 
         // Apply BM25 ranking settings
-        db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('rebuild')`);
-        db.run(`INSERT INTO quotes(quotes) VALUES('optimize')`);
+        applyQuotesRankingAndOptimize(db);
 
         elements.progressMessage.textContent = 'Datenbank wird optimiert...';
         

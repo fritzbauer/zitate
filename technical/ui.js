@@ -10,11 +10,84 @@ function formatHighlightedHtml(html) {
   return s.replace(/\r\n|\n/g, '<br>');
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderAttachments(quoteRowid) {
+  const container = $('#attachmentsList');
+  container.innerHTML = '';
+
+  if (!quoteRowid) {
+    container.innerHTML = '<div class="no-attachments">Speichern Sie zuerst das Zitat, um Anhänge hinzuzufügen.</div>';
+    return;
+  }
+
+  const attachments = getAttachments(quoteRowid);
+  const isEditing = document.getElementById('editDetailBtn')?.dataset.editing === '1';
+
+  if (attachments.length === 0) {
+    container.innerHTML = '<div class="no-attachments">Keine Anhänge</div>';
+    return;
+  }
+
+  attachments.forEach(att => {
+    const item = document.createElement('div');
+    item.className = 'attachment-item';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'attachment-name';
+    nameEl.textContent = att.filename;
+    nameEl.title = 'Klicken zum Herunterladen';
+    nameEl.addEventListener('click', () => downloadAttachment(att.id));
+
+    const sizeEl = document.createElement('span');
+    sizeEl.className = 'attachment-size';
+    sizeEl.textContent = formatFileSize(att.size);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'attachment-delete';
+    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.title = 'Anhang löschen';
+    deleteBtn.style.display = isEditing ? 'inline-block' : 'none';
+    deleteBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm(`Anhang "${att.filename}" wirklich löschen?`)) {
+        await deleteAttachment(att.id);
+        renderAttachments(quoteRowid);
+      }
+    });
+
+    item.appendChild(nameEl);
+    item.appendChild(sizeEl);
+    item.appendChild(deleteBtn);
+    container.appendChild(item);
+  });
+}
+
+function downloadAttachment(attachmentId) {
+  const att = getAttachmentData(attachmentId);
+  if (!att) return;
+  const blob = new Blob([att.data], { type: att.mime_type || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = att.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function enterDetailEditMode() {
   document.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'inline-block');
   document.querySelectorAll('.detail-display').forEach(el => el.style.display = 'none');
   const btn = document.getElementById('editDetailBtn');
   if (btn) { btn.textContent = 'Abbrechen'; btn.dataset.editing = '1'; }
+  // Show attachment delete buttons
+  document.querySelectorAll('.attachment-delete').forEach(el => el.style.display = 'inline-block');
 }
 
 function exitDetailEditMode() {
@@ -26,6 +99,8 @@ function exitDetailEditMode() {
   document.getElementById('prevQuoteBtn').style.display = '';
   document.getElementById('nextQuoteBtn').style.display = '';
   document.getElementById('deleteDetailBtn').style.display = '';
+  // Hide attachment delete buttons
+  document.querySelectorAll('.attachment-delete').forEach(el => el.style.display = 'none');
 }
 
 function renderResults(rows) {
@@ -92,14 +167,6 @@ function renderResults(rows) {
       $('#totalCount').textContent = String(totalResults);
       updateSelectedCounter();
 
-      // Helper buttons bound to current page rows
-      /*
-      $('#selectPageBtn').onclick = () => {
-        for (const id of rowsIds) selectedIds.add(id);
-        tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-        updateSelectedCounter();
-        $('#selectAllCheckbox').checked = true;
-      };*/
       $('#clearPageBtn').onclick = () => {
         for (const id of selectedIds) selectedIds.delete(id);
         tbody.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -154,6 +221,9 @@ function renderResults(rows) {
       
       $('#detailExportCb').checked = selectedIds.has(quote.id);
 
+      // Render attachments
+      renderAttachments(quote.id);
+
       // Ensure we start in display (non-edit) mode
       exitDetailEditMode();
 
@@ -179,6 +249,9 @@ function renderResults(rows) {
       
       // Hide "Für Export markieren" checkbox for new quotes
       document.querySelector('.export-check').style.display = 'none';
+
+      // Render attachments (empty for new quotes)
+      renderAttachments(null);
       
       enterDetailEditMode();
       
@@ -197,6 +270,10 @@ function renderResults(rows) {
 
     // ---- Event bindings ----
     window.addEventListener('DOMContentLoaded', () => {
+      if (typeof updateStorageButtons === 'function') {
+        updateStorageButtons();
+      }
+
       const modal = $('#detailModal');
       const closeButton = modal.querySelector('.close-button');
 
@@ -260,14 +337,7 @@ function renderResults(rows) {
             return;
           }
           
-          // Insert new quote
-          db.run(
-            `INSERT INTO quotes (titel, quelle, zitat, genutzt, DeletedDateTime)
-             VALUES (?, ?, ?, ?, NULL)`,
-            [titel, quelle, zitat, genutzt]
-          );
-          runMaintenanceIfNeeded();
-          await saveDatabase();
+          await insertQuote(titel, quelle, zitat, genutzt);
         } else {
           // Existing quote - update it
           const id = parseInt(detailId, 10);
@@ -312,10 +382,31 @@ function renderResults(rows) {
 
       $('#openBtn').addEventListener('click', loadDatabase);
       $('#newQuoteBtn').addEventListener('click', openDetailViewForNewQuote);
-      //$('#saveBtn').addEventListener('click', saveDatabase);
-      //$('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
-      //$('#addQuoteBtn').addEventListener('click', addQuote);
-      //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
+
+      // Attachment handling
+      $('#addAttachmentBtn').addEventListener('click', () => {
+        $('#attachmentFileInput').click();
+      });
+      $('#attachmentFileInput').addEventListener('change', async (e) => {
+        const detailId = $('#detailId').value;
+        if (!detailId) {
+          alert('Bitte speichern Sie zuerst das Zitat, um Anhänge hinzuzufügen.');
+          return;
+        }
+        const quoteRowid = parseInt(detailId, 10);
+        const files = e.target.files;
+        for (const file of files) {
+          await addAttachment(quoteRowid, file);
+        }
+        renderAttachments(quoteRowid);
+        e.target.value = ''; // reset input
+      });
+      $('#saveBtn').addEventListener('click', () => {
+        saveDatabase().catch((e) => {
+          console.error(e);
+          alert("Speichern fehlgeschlagen: " + e.message);
+        });
+      });
       $('#exportRtfBtn').addEventListener('click', exportSelectedAsRtf);
       $('#prevPageBtn').addEventListener('click', () => { if (currentPage > 1) { currentPage--; searchQuotes(); } });
       $('#nextPageBtn').addEventListener('click', () => {
@@ -323,6 +414,18 @@ function renderResults(rows) {
         if (currentPage < totalPages) { currentPage++; searchQuotes(); }
       });  
       $('#searchInput').addEventListener('input', debounce(() => searchQuotes(true), 250));
+
+      // Search-all-columns checkbox: re-run search and update placeholder
+      const searchAllCb = $('#searchAllColumns');
+      if (searchAllCb) {
+        searchAllCb.addEventListener('change', () => {
+          $('#searchInput').placeholder = searchAllCb.checked
+            ? 'Suchbegriff in Titel, Quelle, Zitat oder Genutzt …'
+            : 'Suchbegriff im Titel …';
+          searchQuotes(true);
+        });
+      }
+
       $('#selectAllCheckbox').addEventListener('change', () => {
         const tbody = $('#resultsTable tbody');
         const boxes = tbody.querySelectorAll('input[type="checkbox"]');
@@ -350,6 +453,12 @@ function renderResults(rows) {
         if (helpTooltip.classList.contains('visible') && !helpIcon.contains(event.target)) {
           helpTooltip.classList.remove('visible');
         }
+      });
+
+      window.addEventListener('beforeunload', (event) => {
+        if (!hasUnsavedChanges) return;
+        event.preventDefault();
+        event.returnValue = '';
       });
 
       // Edit mode toggle for detail modal

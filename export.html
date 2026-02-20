@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zitate Excel Export</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="technical/styles.css">
+  <link rel="icon" href="technical/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">📤 Zitate Excel Export</div>
+      <a href="index.html" class="btn back-link">← Zurück zur Datenbank</a>
+    </div>
+  </div>
+
+  <div class="wizard-container">
+    <!-- Step 1: Load Database -->
+    <div class="wizard-section">
+      <h3>Schritt 1: Datenbank laden</h3>
+      <p class="wizard-hint">
+        Wählen Sie die SQLite-Datenbankdatei, die Sie exportieren möchten.
+      </p>
+      <div class="file-input-wrapper">
+        <label class="file-input-label" for="dbFileInput">
+          📂 SQLite-Datei auswählen
+        </label>
+        <input type="file" id="dbFileInput" accept=".sqlite,application/octet-stream" />
+      </div>
+      <div class="file-name" id="fileNameDisplay"></div>
+    </div>
+
+    <!-- Step 2: Database Stats & Preview -->
+    <div class="wizard-section" id="previewSection" style="display: none;">
+      <h3>Schritt 2: Datenübersicht</h3>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div style="overflow-x: auto; margin-top: 16px;">
+        <p class="wizard-hint" style="margin-bottom: 8px;">Vorschau (erste 10 Einträge):</p>
+        <table class="preview-table" id="previewTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="previewMessage" style="color: #666; font-size: 14px; margin-top: 8px;"></div>
+    </div>
+
+    <!-- Step 3: Export Options -->
+    <div class="wizard-section" id="exportSection" style="display: none;">
+      <h3>Schritt 3: Export-Optionen</h3>
+      <div class="export-options">
+        <label>
+          <input type="checkbox" id="includeDeleted" />
+          Gelöschte Einträge einschließen
+        </label>
+      </div>
+      <div style="margin-top: 16px;">
+        <button class="btn primary" id="exportBtn" style="font-size: 16px; padding: 12px 24px;">
+          📥 Als Excel exportieren
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusContainer"></div>
+  </div>
+
+  <!-- SheetJS Library -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <!-- SQL.js -->
+  <script src="technical/sql-wasm.js"></script>
+  <script src="technical/db_schema.js"></script>
+  <script>
+    let db = null;
+    let SQL = null;
+
+    const elements = {
+      dbFileInput: document.getElementById('dbFileInput'),
+      fileNameDisplay: document.getElementById('fileNameDisplay'),
+      previewSection: document.getElementById('previewSection'),
+      statsGrid: document.getElementById('statsGrid'),
+      previewTable: document.getElementById('previewTable'),
+      previewMessage: document.getElementById('previewMessage'),
+      exportSection: document.getElementById('exportSection'),
+      includeDeleted: document.getElementById('includeDeleted'),
+      exportBtn: document.getElementById('exportBtn'),
+      statusContainer: document.getElementById('statusContainer')
+    };
+
+    // Initialize SQL.js
+    async function initSQL() {
+      if (!SQL) {
+        SQL = await getSqlRuntime();
+      }
+    }
+
+    // Show status message
+    function showStatus(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `status-message ${type}`;
+      div.textContent = message;
+      elements.statusContainer.innerHTML = '';
+      elements.statusContainer.appendChild(div);
+    }
+
+    // Load database file
+    elements.dbFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        elements.fileNameDisplay.textContent = `Datei: ${file.name}`;
+        showStatus(`Lade Datenbank: ${file.name}...`, 'info');
+
+        await initSQL();
+        const buffer = await file.arrayBuffer();
+        db = new SQL.Database(new Uint8Array(buffer));
+        ensureLoboscoSchema(db);
+
+        showDatabaseStats();
+        showPreview();
+        elements.previewSection.style.display = 'block';
+        elements.exportSection.style.display = 'block';
+        showStatus('Datenbank geladen. Bereit zum Export.', 'success');
+      } catch (error) {
+        showStatus(`Fehler beim Laden der Datenbank: ${error.message}`, 'error');
+        console.error(error);
+      }
+    });
+
+    // Show database statistics
+    function showDatabaseStats() {
+      if (!db) return;
+
+      const totalResult = db.exec("SELECT COUNT(*) FROM quotes");
+      const total = totalResult[0]?.values[0][0] || 0;
+
+      const activeResult = db.exec("SELECT COUNT(*) FROM quotes WHERE DeletedDateTime IS NULL");
+      const active = activeResult[0]?.values[0][0] || 0;
+
+      const deleted = total - active;
+
+      elements.statsGrid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${active}</div>
+          <div class="stat-label">Aktive Zitate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${deleted}</div>
+          <div class="stat-label">Gelöschte Zitate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">Gesamt</div>
+        </div>
+      `;
+    }
+
+    // Show data preview
+    function showPreview() {
+      if (!db) return;
+
+      const table = elements.previewTable;
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      const columns = ['titel', 'quelle', 'zitat', 'genutzt'];
+
+      // Header
+      const headerRow = document.createElement('tr');
+      columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col.charAt(0).toUpperCase() + col.slice(1);
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+
+      // Preview rows (max 10)
+      const result = db.exec(`SELECT titel, quelle, zitat, genutzt FROM quotes WHERE DeletedDateTime IS NULL LIMIT 10`);
+      if (result.length > 0) {
+        result[0].values.forEach(row => {
+          const tr = document.createElement('tr');
+          row.forEach(val => {
+            const td = document.createElement('td');
+            const text = val || '';
+            td.textContent = text.length > 100 ? text.substring(0, 100) + '…' : text;
+            td.title = text;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      const activeResult = db.exec("SELECT COUNT(*) FROM quotes WHERE DeletedDateTime IS NULL");
+      const active = activeResult[0]?.values[0][0] || 0;
+      if (active > 10) {
+        elements.previewMessage.textContent = `… und ${active - 10} weitere Einträge`;
+      } else {
+        elements.previewMessage.textContent = `Insgesamt ${active} Einträge`;
+      }
+    }
+
+    // Export to Excel
+    elements.exportBtn.addEventListener('click', () => {
+      if (!db) {
+        showStatus('Keine Datenbank geladen.', 'error');
+        return;
+      }
+
+      try {
+        const includeDeleted = elements.includeDeleted.checked;
+        const whereClause = includeDeleted ? '' : 'WHERE DeletedDateTime IS NULL';
+
+        const result = db.exec(`SELECT titel, quelle, zitat, genutzt FROM quotes ${whereClause}`);
+        if (!result.length || result[0].values.length === 0) {
+          showStatus('Keine Daten zum Exportieren gefunden.', 'error');
+          return;
+        }
+
+        const headers = ['Titel', 'Quelle', 'Zitat', 'Genutzt'];
+        // Excel has a 32767 character limit per cell - truncate if needed
+        const MAX_CELL_LENGTH = 32000;
+        const truncatedValues = result[0].values.map(row =>
+          row.map(val => {
+            const s = val || '';
+            return s.length > MAX_CELL_LENGTH ? s.substring(0, MAX_CELL_LENGTH) + '…[gekürzt]' : s;
+          })
+        );
+        const data = [headers, ...truncatedValues];
+
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+        // Auto-size columns based on content
+        const colWidths = headers.map((h, i) => {
+          let maxLen = h.length;
+          truncatedValues.forEach(row => {
+            const cellLen = (row[i] || '').toString().length;
+            maxLen = Math.max(maxLen, Math.min(cellLen, 60));
+          });
+          return { wch: maxLen + 2 };
+        });
+        worksheet['!cols'] = colWidths;
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Zitate');
+
+        // Generate filename with date
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `zitate_export_${dateStr}.xlsx`;
+
+        XLSX.writeFile(workbook, filename);
+
+        const rowCount = result[0].values.length;
+        showStatus(`${rowCount} Zitate erfolgreich als "${filename}" exportiert.`, 'success');
+      } catch (error) {
+        showStatus(`Fehler beim Export: ${error.message}`, 'error');
+        console.error(error);
+      }
+    });
+
+    // Initialize
+    initSQL().catch(error => {
+      showStatus(`Fehler beim Initialisieren: ${error.message}`, 'error');
+      console.error(error);
+    });
+  </script>
+</body>
+</html>

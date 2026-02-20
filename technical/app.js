@@ -1,10 +1,15 @@
 let db;
 let fileHandle;
+let openedFileName = 'quotes.sqlite';
+let requiresManualSave = false;
+let hasUnsavedChanges = false;
+let manualSaveHintShown = false;
 let currentPage = 1;
 let pageSize = 100;
 let totalResults = 0;
 let selectedIds = new Set();
 let lastSearchTerm = "";
+const basePageTitle = document.title.replace(/^\*\s*/, '');
 
 // Small helpers
 const $ = sel => document.querySelector(sel);
@@ -17,6 +22,51 @@ function escapeHTML(str) {
       return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
 
+function markDatabaseChanged() {
+  hasUnsavedChanges = true;
+  updatePageTitleUnsavedState();
+}
+
+function clearDatabaseChanged() {
+  hasUnsavedChanges = false;
+  updatePageTitleUnsavedState();
+}
+
+function updatePageTitleUnsavedState() {
+  document.title = hasUnsavedChanges ? `* ${basePageTitle}` : basePageTitle;
+}
+
+function maybeShowManualSaveHint() {
+  if (!requiresManualSave || manualSaveHintShown) return;
+  manualSaveHintShown = true;
+  alert("Dieser Browser unterstützt kein direktes Speichern in die geöffnete Datei. Bitte speichern Sie Änderungen manuell über 'Datenbank speichern'.");
+}
+
+function supportsFileSystemAccessApi() {
+  return typeof window.showOpenFilePicker === 'function';
+}
+
+function updateStorageButtons() {
+  const openBtn = $('#openBtn');
+  const saveBtn = $('#saveBtn');
+  if (!openBtn || !saveBtn) return;
+
+  if (supportsFileSystemAccessApi()) {
+    openBtn.style.display = '';
+    saveBtn.style.display = 'none';
+    return;
+  }
+
+  if (!db) {
+    openBtn.style.display = '';
+    saveBtn.style.display = 'none';
+    return;
+  }
+
+  openBtn.style.display = 'none';
+  saveBtn.style.display = '';
+}
+
 function searchQuotes(resetPage = false) {
   if (!db) return;
   const term = $('#searchInput').value.trim();
@@ -25,7 +75,8 @@ function searchQuotes(resetPage = false) {
   }
   lastSearchTerm = term;
 
-  const { where, params } = buildSearchWhere(term);
+  const searchAllColumns = $('#searchAllColumns') ? $('#searchAllColumns').checked : false;
+  const { where, params } = buildSearchWhere(term, searchAllColumns);
 
   // Count total matching (non-deleted) results
   let count = 0;
