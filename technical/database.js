@@ -14,6 +14,15 @@ async function openDatabaseFromFile(file) {
   )`);
 
   db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
+
+  // Create attachments table (separate from FTS5, stores blobs)
+  db.run(`CREATE TABLE IF NOT EXISTS attachments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quote_rowid INTEGER NOT NULL,
+    filename TEXT NOT NULL,
+    mime_type TEXT,
+    data BLOB NOT NULL
+  )`);
 }
 
 async function loadDatabase() {
@@ -126,6 +135,60 @@ async function dropTable() {
         console.error(e);
         alert("Fehler beim Löschen der Tabelle: " + e.message);
     }
+}
+
+// ---- Attachments CRUD ----
+function getAttachments(quoteRowid) {
+  if (!db) return [];
+  const stmt = db.prepare('SELECT id, filename, mime_type, length(data) as size FROM attachments WHERE quote_rowid = ? ORDER BY id ASC');
+  stmt.bind([quoteRowid]);
+  const results = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return results;
+}
+
+function getAttachmentData(attachmentId) {
+  if (!db) return null;
+  const stmt = db.prepare('SELECT filename, mime_type, data FROM attachments WHERE id = ?');
+  stmt.bind([attachmentId]);
+  let result = null;
+  if (stmt.step()) {
+    result = stmt.getAsObject();
+  }
+  stmt.free();
+  return result;
+}
+
+async function addAttachment(quoteRowid, file) {
+  if (!db) return;
+  const buffer = await file.arrayBuffer();
+  const data = new Uint8Array(buffer);
+  db.run(
+    'INSERT INTO attachments (quote_rowid, filename, mime_type, data) VALUES (?, ?, ?, ?)',
+    [quoteRowid, file.name, file.type || 'application/octet-stream', data]
+  );
+  await saveAfterMutation();
+}
+
+async function deleteAttachment(attachmentId) {
+  if (!db) return;
+  db.run('DELETE FROM attachments WHERE id = ?', [attachmentId]);
+  await saveAfterMutation();
+}
+
+function getAttachmentNames(quoteRowid) {
+  if (!db) return [];
+  const stmt = db.prepare('SELECT filename FROM attachments WHERE quote_rowid = ? ORDER BY id ASC');
+  stmt.bind([quoteRowid]);
+  const names = [];
+  while (stmt.step()) {
+    names.push(stmt.getAsObject().filename);
+  }
+  stmt.free();
+  return names;
 }
 
 // ---- CRUD ----

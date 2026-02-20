@@ -19,8 +19,9 @@ function buildHtml(quotes) {
     '<tr>',
     '<th style="width:20%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Titel</th>',
     '<th style="width:10%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Quelle</th>',
-    '<th style="width:60%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Zitat</th>',
+    '<th style="width:50%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Zitat</th>',
     '<th style="width:10%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Genutzt</th>',
+    '<th style="width:10%;text-align:left;padding:4px 6px;border:1px solid #bbb;background:#f5f6fa">Anhänge</th>',
     '</tr>',
     '</thead>',
     '<tbody>'
@@ -30,11 +31,17 @@ function buildHtml(quotes) {
     const quelle = htmlEscape(q.quelle || '');
     const zitat = htmlEscape(q.zitat || '');
     const genutzt = htmlEscape(q.genutzt || '');
+    const attachmentNames = getAttachmentNames(q.id);
     parts.push('<tr>');
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(title)}</td>`);
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;font-style:italic;color:#444">${nlToBr(quelle)}</td>`);
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb">${nlToBr(zitat)}</td>`);
     parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;color:#666;font-size:0.9em">${nlToBr(genutzt)}</td>`);
+    if (attachmentNames.length > 0) {
+      parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb;font-size:0.85em;color:#555">📎 ${attachmentNames.map(n => htmlEscape(n)).join(', ')}</td>`);
+    } else {
+      parts.push(`<td style="vertical-align:top;padding:4px 6px;border:1px solid #bbb"></td>`);
+    }
     parts.push('</tr>');
   }
   parts.push('</tbody>');
@@ -94,6 +101,10 @@ function exportSelectedAsRtf() {
     if (q.quelle) parts.push(`*Quelle:* _${q.quelle}_`);
     if (q.zitat) parts.push(`*Zitat:* ${q.zitat}`);
     if (q.genutzt) parts.push(`*Genutzt:* ${q.genutzt}`);
+    const attachmentNames = getAttachmentNames(q.id);
+    if (attachmentNames.length > 0) {
+      parts.push(`*Anhänge:* ${attachmentNames.join(', ')}`);
+    }
     return parts.join('\n') + '\n';
   }).join('\n');
 

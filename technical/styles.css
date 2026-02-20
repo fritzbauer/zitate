@@ -400,3 +400,68 @@
   padding: 0 2px;
   border-radius: 2px;
 }
+
+/* Attachments */
+.attachments-section {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.attachment-item .attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.attachment-item .attachment-name:hover {
+  color: var(--accent-2);
+}
+
+.attachment-item .attachment-size {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.attachment-item .attachment-delete {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: none;
+}
+
+.attachment-item .attachment-delete:hover {
+  background: rgba(225, 29, 72, 0.1);
+}
+
+.no-attachments {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
