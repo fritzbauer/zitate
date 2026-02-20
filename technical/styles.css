@@ -465,3 +465,268 @@
   font-size: 13px;
   font-style: italic;
 }
+
+/* ===== RESPONSIVE LAYOUT ===== */
+
+/* --- Tablet (max-width: 768px) --- */
+@media (max-width: 768px) {
+  :root {
+    --topbar-height: auto;
+  }
+
+  body {
+    padding-top: 8px;
+  }
+
+  .topbar {
+    position: relative;
+  }
+
+  .topbar-inner {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    min-height: unset;
+  }
+
+  .brand {
+    font-size: 16px;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 4px;
+  }
+
+  .topbar-inner .btn {
+    font-size: 13px;
+    padding: 8px 10px;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .app {
+    padding: 0 8px;
+    min-height: auto;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .counter {
+    order: 2;
+  }
+
+  .modal-content {
+    width: 95vw;
+    max-width: none;
+    top: 2vh;
+    max-height: 96vh;
+    padding: 14px;
+  }
+
+  .modal-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-nav {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Table: enable horizontal scroll */
+  #resultsCard > div:first-child {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #resultsTable {
+    min-width: 600px;
+  }
+
+  .pagination {
+    gap: 6px;
+  }
+
+  /* Import/export page containers */
+  .import-container,
+  .export-container {
+    padding: 12px;
+  }
+
+  .tooltip {
+    width: 280px;
+    left: auto;
+    right: -10px;
+    transform: none;
+  }
+
+  .tooltip::after {
+    left: auto;
+    right: 14px;
+  }
+
+  footer {
+    padding: 12px !important;
+    font-size: 14px;
+  }
+}
+
+/* --- Mobile (max-width: 480px) --- */
+@media (max-width: 480px) {
+  body {
+    padding-top: 4px;
+  }
+
+  .topbar-inner {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .brand {
+    font-size: 15px;
+  }
+
+  .topbar-inner .btn {
+    font-size: 12px;
+    padding: 7px 8px;
+    gap: 0.25rem;
+  }
+
+  .app {
+    padding: 0 4px;
+  }
+
+  .card {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .search-bar {
+    gap: 8px;
+  }
+
+  .search-with-help input {
+    font-size: 14px;
+  }
+
+  .modal-content {
+    width: 100vw;
+    max-width: 100vw;
+    top: 0;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 10px;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .modal-nav {
+    gap: 4px;
+  }
+
+  .export-check label {
+    font-size: 12px;
+  }
+
+  #detailText {
+    height: 200px;
+  }
+
+  /* Hide "Genutzt" column on small phones */
+  #resultsTable thead th:nth-child(5),
+  #resultsTable tbody td:nth-child(5) {
+    display: none;
+  }
+
+  #resultsTable {
+    min-width: 480px;
+  }
+
+  thead th, tbody td {
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .pagination .pill {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .tooltip {
+    width: 260px;
+    font-size: 12px;
+  }
+
+  /* Attachment items */
+  .attachment-item {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* Import/export containers */
+  .import-container,
+  .export-container {
+    padding: 8px;
+  }
+
+  .import-section,
+  .export-section {
+    padding: 12px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 8px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 11px;
+  }
+
+  /* Button actions in modal */
+  .modal-content > div:last-child {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .modal-content > div:last-child .btn {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  footer {
+    padding: 10px !important;
+    font-size: 13px;
+  }
+}
+
+/* --- Large Desktop (min-width: 1280px) --- */
+@media (min-width: 1280px) {
+  .app {
+    max-width: 1700px;
+  }
+}
