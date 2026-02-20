@@ -1,0 +1,22 @@
+{
+	"servers": {
+		"Playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"@playwright/mcp@latest",
+				"--output-dir",
+				"/home/rouven/tmp/playwright",
+				"--browser",
+				"firefox"
+			],
+			"env": {
+				"DISPLAY": ":0",
+				"WAYLAND_DISPLAY": "wayland-0",
+				"XDG_RUNTIME_DIR": "/run/user/1002",
+				"XDG_SESSION_TYPE": "wayland"
+			}
+		}
+	},
+	"inputs": []
+}

@@ -4,7 +4,9 @@ Zitate
 A small client-side web project for browsing and searching a collection of quotes.
 
 - The UI and logic are in the `technical/` folder (HTML/JS/CSS).
+- `host.sh` has been added as a convienence helper to host the app locally
 - Open `index.html` or `import.html` in a browser to run the app locally.
+
 
 Custom sql.js build
 -------------------
