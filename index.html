@@ -32,12 +32,14 @@
     <div class="topbar-inner">
       <div class="brand">🗂️ Zitate‑Datenbank</div>
       <button class="btn" id="openBtn">📂&nbsp;Datenbank öffnen</button>
+      <button class="btn" id="saveBtn">💾&nbsp;Datenbank speichern</button>
       <button class="btn" id="newQuoteBtn">➕&nbsp;Neues Zitat</button>
       <button class="btn primary" id="exportRtfBtn">⎘&nbsp;Kopieren</button>
       <!--<button class="btn" id="saveBtn">💾&nbsp;Speichern</button>
       <button id="dropTableBtn" class="btn">Drop Table</button>-->
     </div>
   </div>
+  <input type="file" id="dbFileInput" accept=".sqlite,application/octet-stream" style="display:none;" />
 
   <div class="app">
     <!-- Suche -->

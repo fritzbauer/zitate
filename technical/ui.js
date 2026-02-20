@@ -267,7 +267,7 @@ function renderResults(rows) {
             [titel, quelle, zitat, genutzt]
           );
           runMaintenanceIfNeeded();
-          await saveDatabase();
+          await saveAfterMutation();
         } else {
           // Existing quote - update it
           const id = parseInt(detailId, 10);
@@ -312,7 +312,12 @@ function renderResults(rows) {
 
       $('#openBtn').addEventListener('click', loadDatabase);
       $('#newQuoteBtn').addEventListener('click', openDetailViewForNewQuote);
-      //$('#saveBtn').addEventListener('click', saveDatabase);
+      $('#saveBtn').addEventListener('click', () => {
+        saveDatabase().catch((e) => {
+          console.error(e);
+          alert("Speichern fehlgeschlagen: " + e.message);
+        });
+      });
       //$('#dropTableBtn').addEventListener('click', dropTable); // NEW event listener
       //$('#addQuoteBtn').addEventListener('click', addQuote);
       //$('#deleteSelectedBtn').addEventListener('click', deleteSelected);
@@ -350,6 +355,12 @@ function renderResults(rows) {
         if (helpTooltip.classList.contains('visible') && !helpIcon.contains(event.target)) {
           helpTooltip.classList.remove('visible');
         }
+      });
+
+      window.addEventListener('beforeunload', (event) => {
+        if (!hasUnsavedChanges) return;
+        event.preventDefault();
+        event.returnValue = '';
       });
 
       // Edit mode toggle for detail modal

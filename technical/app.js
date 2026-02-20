@@ -1,10 +1,15 @@
 let db;
 let fileHandle;
+let openedFileName = 'quotes.sqlite';
+let requiresManualSave = false;
+let hasUnsavedChanges = false;
+let manualSaveHintShown = false;
 let currentPage = 1;
 let pageSize = 100;
 let totalResults = 0;
 let selectedIds = new Set();
 let lastSearchTerm = "";
+const basePageTitle = document.title.replace(/^\*\s*/, '');
 
 // Small helpers
 const $ = sel => document.querySelector(sel);
@@ -16,6 +21,26 @@ function debounce(fn, delay = 250) {
 function escapeHTML(str) {
       return String(str ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
+
+function markDatabaseChanged() {
+  hasUnsavedChanges = true;
+  updatePageTitleUnsavedState();
+}
+
+function clearDatabaseChanged() {
+  hasUnsavedChanges = false;
+  updatePageTitleUnsavedState();
+}
+
+function updatePageTitleUnsavedState() {
+  document.title = hasUnsavedChanges ? `* ${basePageTitle}` : basePageTitle;
+}
+
+function maybeShowManualSaveHint() {
+  if (!requiresManualSave || manualSaveHintShown) return;
+  manualSaveHintShown = true;
+  alert("Dieser Browser unterstützt kein direktes Speichern in die geöffnete Datei. Bitte speichern Sie Änderungen manuell über 'Datenbank speichern'.");
+}
 
 function searchQuotes(resetPage = false) {
   if (!db) return;

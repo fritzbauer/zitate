@@ -1,27 +1,55 @@
 // ---- DB init ----
+async function openDatabaseFromFile(file) {
+  const buffer = await file.arrayBuffer();
+  const SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
+  db = new SQL.Database(new Uint8Array(buffer));
+
+  db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
+    titel,
+    quelle,
+    zitat,
+    genutzt,
+    DeletedDateTime UNINDEXED,
+    tokenize = 'snowball italian german english'
+  )`);
+
+  db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
+}
+
 async function loadDatabase() {
   try {
-    const [handle] = await window.showOpenFilePicker({
-      types: [{ description: 'SQLite DB', accept: { 'application/octet-stream': ['.sqlite'] } }]
-    });
-    fileHandle = handle;
-    const file = await fileHandle.getFile();
-    const buffer = await file.arrayBuffer();
-    const SQL = await initSqlJs({ locateFile: file => `technical/${file}` });
-    db = new SQL.Database(new Uint8Array(buffer));
+    let file;
+    const supportsPicker = typeof window.showOpenFilePicker === 'function';
 
-    // Create FTS5 virtual table if not exists
-    db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS quotes USING fts5(
-      titel,
-      quelle,
-      zitat,
-      genutzt,
-      DeletedDateTime UNINDEXED,
-      tokenize = 'snowball italian german english'
-    )`);
-    
-    // Set the ranking weights using BM25
-    db.run(`INSERT INTO quotes(quotes, rank) VALUES('rank', 'bm25(10.0, 5.0, 8.0, 2.0)')`);
+    if (supportsPicker) {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'SQLite DB', accept: { 'application/octet-stream': ['.sqlite'] } }]
+      });
+      fileHandle = handle;
+      file = await fileHandle.getFile();
+      requiresManualSave = false;
+    } else {
+      const input = $('#dbFileInput');
+      if (!input) {
+        throw new Error('Datei-Auswahl nicht verfügbar.');
+      }
+      file = await new Promise(resolve => {
+        input.value = '';
+        input.onchange = () => resolve(input.files && input.files[0]);
+        input.click();
+      });
+      if (!file) {
+        throw new Error('Keine Datei ausgewählt.');
+      }
+      fileHandle = undefined;
+      requiresManualSave = true;
+    }
+
+    openedFileName = file.name || 'quotes.sqlite';
+    manualSaveHintShown = false;
+    clearDatabaseChanged();
+
+    await openDatabaseFromFile(file);
 
     // Do initial search
     await searchQuotes(true);
@@ -32,12 +60,33 @@ async function loadDatabase() {
 }
 
 async function saveDatabase() {
-  if (!db || !fileHandle) { alert("Keine Datenbank geöffnet."); return; }
-  const writable = await fileHandle.createWritable();
+  if (!db) { alert("Keine Datenbank geöffnet."); return; }
   const buffer = db.export();
-  await writable.write(buffer);
-  await writable.close();
+  if (!requiresManualSave && fileHandle) {
+    const writable = await fileHandle.createWritable();
+    await writable.write(buffer);
+    await writable.close();
+  } else {
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = openedFileName || 'quotes.sqlite';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  clearDatabaseChanged();
   //alert("Datenbank gespeichert.");
+}
+
+async function saveAfterMutation() {
+  markDatabaseChanged();
+  maybeShowManualSaveHint();
+  if (!requiresManualSave) {
+    await saveDatabase();
+  }
 }
 
 function runMaintenanceIfNeeded() {
@@ -69,11 +118,10 @@ async function dropTable() {
     }
     try {
         db.run('DROP TABLE IF EXISTS quotes');
+      await saveAfterMutation();
         alert("Die Tabelle 'quotes' wurde gelöscht.");
         // Refresh the view, which will now be empty
         await searchQuotes(true);
-        // Save the change to the file
-        await saveDatabase();
     } catch (e) {
         console.error(e);
         alert("Fehler beim Löschen der Tabelle: " + e.message);
@@ -110,9 +158,9 @@ function addQuote() {
   // Refresh and persist
   currentPage = 1;
   searchQuotes(true);
-  saveDatabase().catch(()=>{});
+  saveAfterMutation().catch(()=>{});
 }
-function updateQuote(id, quote) {
+async function updateQuote(id, quote) {
   if (!db) return;
   db.run(
     `UPDATE quotes
@@ -120,21 +168,21 @@ function updateQuote(id, quote) {
      WHERE rowid = ?`,
     [quote.titel, quote.quelle, quote.zitat, quote.genutzt, id]
   );
-  saveDatabase().catch(()=>{});
+  await saveAfterMutation();
 }
 
 // MODIFIED: deleteQuote now performs a soft delete
-function deleteQuote(id) {
+async function deleteQuote(id) {
   if (!db || !id) return;
   const timestamp = new Date().toISOString();
   db.run(`UPDATE quotes SET DeletedDateTime = ? WHERE rowid = ?`, [timestamp, id]);
   selectedIds.delete(id);
   searchQuotes();
-  saveDatabase().catch(()=>{});
+  await saveAfterMutation();
 }
 
 // MODIFIED: deleteSelected now performs a soft delete
-function deleteSelected() {
+async function deleteSelected() {
   if (!db) return;
   if (selectedIds.size === 0) { alert("Keine markierten Zitate."); return; }
   if (!confirm(`Wirklich ${selectedIds.size} markierte Zitat(e) löschen?`)) return;
@@ -152,5 +200,5 @@ function deleteSelected() {
 
   selectedIds.clear();
   searchQuotes();
-  saveDatabase().catch(()=>{});
+  await saveAfterMutation();
 }
