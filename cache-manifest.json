@@ -1,27 +1,97 @@
 {
   "version": 1,
   "files": [
-    "./",
-    "index.html",
-    "manifest.json",
-    "import.html",
-    "export.html",
-    "technical/app.js",
-    "technical/clipboard.js",
-    "technical/database.js",
-    "technical/search_logic.js",
-    "technical/snowball_languages.json",
-    "technical/sql-wasm.js",
-    "technical/sql-wasm.wasm",
-    "technical/styles.css",
-    "technical/ui.js",
-    "technical/icons/icon-72.png",
-    "technical/icons/icon-144.png",
-    "technical/icons/icon-192.png",
-    "technical/icons/icon-256.png",
-    "technical/icons/icon-384.png",
-    "technical/icons/icon-512.png",
-    "technical/icons/icon.png",
-    "technical/favicon.ico"
+    {
+      "path": "./",
+      "hash": "3d7ba78af01f814f76b33b7e174d3a414f86223a4710a1701f49f0abad6688c4"
+    },
+    {
+      "path": "index.html",
+      "hash": "3d7ba78af01f814f76b33b7e174d3a414f86223a4710a1701f49f0abad6688c4"
+    },
+    {
+      "path": "manifest.json",
+      "hash": "e4ba7cc44f944c7d4c5004f19baedb71e46f093a89c87ed6f098c4c412003c5f"
+    },
+    {
+      "path": "import.html",
+      "hash": "9d5256566d105dbf0d4b5eef90a3a5f9535da5ffa1e598ed3c9480dcdc6650aa"
+    },
+    {
+      "path": "export.html",
+      "hash": "e5c8d4b08cd9568d494e88e12ecbb558538cb744f90cd229fc4ecb31e7ff995d"
+    },
+    {
+      "path": "technical/app.js",
+      "hash": "d61967d7c21f1936bebef344693b4c0bbb4f08f4a0fb4ff6d0c75df6f7688b1c"
+    },
+    {
+      "path": "technical/clipboard.js",
+      "hash": "19cc90c993cc4c452a1ef59024f6d150a79920eb49a6cccfd38683307776404d"
+    },
+    {
+      "path": "technical/database.js",
+      "hash": "1709705a278438f01e14f474caeea51a1b1f8c39baf76c7d65ed8768c6c8bc7e"
+    },
+    {
+      "path": "technical/search_logic.js",
+      "hash": "71f1f1e15e88691f75bff3bd84e06242247e155a8ad71e81facdf88e7575027c"
+    },
+    {
+      "path": "technical/snowball_languages.json",
+      "hash": "18b64adede7bc2d3ce20f426cebf41a8071fab0b0fb85cc769ac7fc6fc18f8d6"
+    },
+    {
+      "path": "technical/sql-wasm.js",
+      "hash": "7a19e4a4a10fde3949aa83385976056ddf19b16e7110b1312631ceb378f70d4c"
+    },
+    {
+      "path": "technical/sql-wasm.wasm",
+      "hash": "34326f252ddedbfb1d45774a4a7e464c9b1b6ed3375f8515ff23089bd1747cd4"
+    },
+    {
+      "path": "technical/styles.css",
+      "hash": "101416c6b36f2a0d2b41d6919900a3337aaabfb3ab7169d48bcb9991488f337b"
+    },
+    {
+      "path": "technical/ui.js",
+      "hash": "aece290c6868d5c48cc424723510bd8b0b1ec29e12884f9ee1ddcef83a3c7482"
+    },
+    {
+      "path": "technical/icons/icon-72.png",
+      "hash": "d3bf43dbb3a466adb1e37acb992ebd4a1ec5a1945ceac3711a86685de06325f7"
+    },
+    {
+      "path": "technical/icons/icon-144.png",
+      "hash": "6c294bb48229681aba4d00bda19c1dcec5a3004b9424c7c726619a39c566f725"
+    },
+    {
+      "path": "technical/icons/icon-192.png",
+      "hash": "e13f702467db42e6de73a98b0734e52945f73533ffa063f89ae70ae95b149dee"
+    },
+    {
+      "path": "technical/icons/icon-256.png",
+      "hash": "c95857f0ad8b725dc31e0ea5b54b1221ce4be36ec0342c36806a5060f6824484"
+    },
+    {
+      "path": "technical/icons/icon-384.png",
+      "hash": "c7ad0163002bbaf4c97dbe53fed3cdb2a5079492b5a85b1c38f27f127e78f86a"
+    },
+    {
+      "path": "technical/icons/icon-512.png",
+      "hash": "c4834c84284b74cef5b091058365fc8069553aea75be7bf50efcca03a02c316d"
+    },
+    {
+      "path": "technical/icons/icon.png",
+      "hash": "84911508a3960932bc2d8c8468246554ebcdfe74931cf0298627a8a2af210713"
+    },
+    {
+      "path": "technical/favicon.ico",
+      "hash": "3b21ac6b4f6dc99c172532061838f8b34ccd919fc8edd266b6380a552f3b8393"
+    },
+    {
+      "path": "cache-manifest.json",
+      "hash": ""
+    }
   ]
 }

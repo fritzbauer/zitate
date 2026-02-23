@@ -5,47 +5,59 @@ const MANIFEST_CHECK_INTERVAL_MS = 60 * 1000;
 let lastManifestCheck = 0;
 let manifestSyncPromise = null;
 
-const FALLBACK_CACHE_MANIFEST = {
-  version: 1,
-  files: [
-    './',
-    'index.html',
-    'manifest.json',
-    'import.html',
-    'export.html',
-    // technical files
-    'technical/app.js',
-    'technical/clipboard.js',
-    'technical/database.js',
-    'technical/search_logic.js',
-    'technical/snowball_languages.json',
-    'technical/sql-wasm.js',
-    'technical/sql-wasm.wasm',
-    'technical/styles.css',
-    'technical/ui.js',
-    // icons
-    'technical/icons/icon-72.png',
-    'technical/icons/icon-144.png',
-    'technical/icons/icon-192.png',
-    'technical/icons/icon-256.png',
-    'technical/icons/icon-384.png',
-    'technical/icons/icon-512.png',
-    'technical/icons/icon.png',
-    'technical/favicon.ico'
-  ]
-};
+const FALLBACK_CACHE_FILES = [
+  './',
+  'index.html',
+  'manifest.json',
+  'import.html',
+  'export.html',
+  // technical files
+  'technical/app.js',
+  'technical/clipboard.js',
+  'technical/database.js',
+  'technical/search_logic.js',
+  'technical/snowball_languages.json',
+  'technical/sql-wasm.js',
+  'technical/sql-wasm.wasm',
+  'technical/styles.css',
+  'technical/ui.js',
+  // icons
+  'technical/icons/icon-72.png',
+  'technical/icons/icon-144.png',
+  'technical/icons/icon-192.png',
+  'technical/icons/icon-256.png',
+  'technical/icons/icon-384.png',
+  'technical/icons/icon-512.png',
+  'technical/icons/icon.png',
+  'technical/favicon.ico'
+];
 
 function normalizeManifest(manifest) {
-  if (!manifest || !Array.isArray(manifest.files)) {
-    return {
-      version: String(FALLBACK_CACHE_MANIFEST.version),
-      files: [...FALLBACK_CACHE_MANIFEST.files, CACHE_MANIFEST_URL]
-    };
+  const sourceFiles = Array.isArray(manifest?.files)
+    ? manifest.files
+    : FALLBACK_CACHE_FILES.map(path => ({ path, hash: '' }));
+  const fileMap = new Map();
+
+  for (const sourceFile of sourceFiles) {
+    if (typeof sourceFile === 'string') {
+      fileMap.set(sourceFile, { path: sourceFile, hash: '' });
+      continue;
+    }
+    if (sourceFile && typeof sourceFile.path === 'string') {
+      fileMap.set(sourceFile.path, {
+        path: sourceFile.path,
+        hash: String(sourceFile.hash ?? '')
+      });
+    }
+  }
+
+  if (!fileMap.has(CACHE_MANIFEST_URL)) {
+    fileMap.set(CACHE_MANIFEST_URL, { path: CACHE_MANIFEST_URL, hash: '' });
   }
 
   return {
-    version: String(manifest.version ?? ''),
-    files: [...new Set([...manifest.files, CACHE_MANIFEST_URL])]
+    version: String(manifest?.version ?? 1),
+    files: [...fileMap.values()]
   };
 }
 
@@ -85,10 +97,35 @@ async function cacheFiles(cache, files) {
   );
 }
 
-function hasSameFiles(firstFiles, secondFiles) {
-  if (firstFiles.length !== secondFiles.length) return false;
-  const secondFileSet = new Set(secondFiles);
-  return firstFiles.every(file => secondFileSet.has(file));
+function manifestHashMap(manifestFiles) {
+  return new Map(manifestFiles.map(file => [file.path, String(file.hash ?? '')]));
+}
+
+function hasSameFileHashes(firstFiles, secondFiles) {
+  const firstMap = manifestHashMap(firstFiles);
+  const secondMap = manifestHashMap(secondFiles);
+  if (firstMap.size !== secondMap.size) return false;
+  return [...firstMap.entries()].every(([path, hash]) => secondMap.get(path) === hash);
+}
+
+async function getFilesToDownload(cache, previousManifest, nextManifest) {
+  if (!previousManifest) {
+    return nextManifest.files.map(file => file.path);
+  }
+
+  const previousHashes = manifestHashMap(previousManifest.files);
+  const decisionList = await Promise.all(
+    nextManifest.files.map(async file => {
+      const previousHash = previousHashes.get(file.path);
+      const currentHash = String(file.hash ?? '');
+      if (currentHash && previousHash === currentHash && await cache.match(file.path)) {
+        return null;
+      }
+      return file.path;
+    })
+  );
+
+  return decisionList.filter(Boolean);
 }
 
 async function syncCacheWithManifest(force = false) {
@@ -106,16 +143,19 @@ async function syncCacheWithManifest(force = false) {
     const hasChanged =
       !previousManifest ||
       previousManifest.version !== nextManifest.version ||
-      !hasSameFiles(previousManifest.files, nextManifest.files);
+      !hasSameFileHashes(previousManifest.files, nextManifest.files);
 
     if (!hasChanged) return;
 
-    await cacheFiles(cache, nextManifest.files);
+    const filesToDownload = await getFilesToDownload(cache, previousManifest, nextManifest);
+    await cacheFiles(cache, filesToDownload);
 
     if (previousManifest && Array.isArray(previousManifest.files)) {
+      const nextPaths = new Set(nextManifest.files.map(file => file.path));
       await Promise.all(
         previousManifest.files
-          .filter(file => !nextManifest.files.includes(file))
+          .map(file => file.path)
+          .filter(file => !nextPaths.has(file))
           .map(file => cache.delete(file))
       );
     }
@@ -134,7 +174,9 @@ async function syncCacheWithManifest(force = false) {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(syncCacheWithManifest(true));
+  event.waitUntil(
+    Promise.all([syncCacheWithManifest(true), self.skipWaiting()])
+  );
 });
 
 self.addEventListener('activate', event => {
@@ -145,7 +187,8 @@ self.addEventListener('activate', event => {
           keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
         )
       ),
-      syncCacheWithManifest(true)
+      syncCacheWithManifest(true),
+      self.clients.claim()
     ])
   );
 });
