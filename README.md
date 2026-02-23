@@ -37,7 +37,9 @@ technical/
   sql-wasm.js           Custom sql.js build with FTS5 + Snowball stemming
   icons/                PWA icons
 service-worker.js       Service worker for offline PWA caching
+cache-manifest.json     List of offline-cached files incl. version for update checks
 manifest.json           PWA manifest
+build.sh                Updates hashes in cache-manifest.json
 ```
 
 Getting started
@@ -47,6 +49,7 @@ Getting started
 2. Open `http://localhost:8000` in a modern browser.
 3. Click **Datenbank öffnen** and select a `.sqlite` file.
 4. Search, browse, edit, and export quotes.
+5. Run `./build.sh` before deployment when cached files changed.
 
 
 Custom sql.js build
