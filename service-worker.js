@@ -98,7 +98,7 @@ async function cacheFiles(cache, files) {
 }
 
 function manifestHashMap(manifestFiles) {
-  return new Map(manifestFiles.map(file => [file.path, String(file.hash ?? '')]));
+  return new Map(manifestFiles.map(file => [file.path, file.hash]));
 }
 
 function hasSameFileHashes(firstFiles, secondFiles) {
@@ -117,8 +117,7 @@ async function getFilesToDownload(cache, previousManifest, nextManifest) {
   const decisionList = await Promise.all(
     nextManifest.files.map(async file => {
       const previousHash = previousHashes.get(file.path);
-      const currentHash = String(file.hash ?? '');
-      if (currentHash && previousHash === currentHash && await cache.match(file.path)) {
+      if (previousHash !== undefined && previousHash === file.hash && await cache.match(file.path)) {
         return null;
       }
       return file.path;
@@ -154,7 +153,7 @@ async function syncCacheWithManifest(force = false) {
       const nextPaths = new Set(nextManifest.files.map(file => file.path));
       await Promise.all(
         previousManifest.files
-          .map(file => file.path)
+          .map(file => typeof file === 'string' ? file : file.path)
           .filter(file => !nextPaths.has(file))
           .map(file => cache.delete(file))
       );

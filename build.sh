@@ -31,8 +31,12 @@ for entry in normalized_entries:
     if rel_path == "cache-manifest.json":
         entry["hash"] = ""
         continue
+    # "./" is the app root and resolves to index.html for static hosting.
     fs_path = repo_dir / ("index.html" if rel_path == "./" else rel_path)
-    digest = hashlib.sha256(fs_path.read_bytes()).hexdigest()
+    try:
+        digest = hashlib.sha256(fs_path.read_bytes()).hexdigest()
+    except FileNotFoundError as error:
+        raise SystemExit(f"Cannot hash '{rel_path}': file not found at '{fs_path}'") from error
     entry["hash"] = digest
 
 manifest["files"] = normalized_entries
