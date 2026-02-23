@@ -358,15 +358,16 @@
   float: right;
   font-size: 28px;
   font-weight: bold;
-/* Zitat-Textarea im Modal Details maximal wachsen lassen */
-  min-height: 0;
-  height: 100%;
-  flex: 1 1 auto;
-  resize: none;
 }
 
 #detailText {
-  height: 400px;
+  height: 200px;
+  min-height: 200px;
+}
+
+#detailUsed {
+  height: 140px;
+  min-height: 140px;
 }
 
 .close-button:hover,
@@ -684,7 +685,13 @@
   }
 
   #detailText {
-    height: 200px;
+    height: 100px;
+    min-height: 100px;
+  }
+
+  #detailUsed {
+    height: 80px;
+    min-height: 80px;
   }
 
   /* Hide Zitat, Quelle, and Genutzt columns – show only checkbox + Titel */

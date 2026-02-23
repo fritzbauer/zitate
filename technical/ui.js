@@ -21,7 +21,7 @@ function renderAttachments(quoteRowid) {
   container.innerHTML = '';
 
   if (!quoteRowid) {
-    container.innerHTML = '<div class="no-attachments">Speichern Sie zuerst das Zitat, um Anhänge hinzuzufügen.</div>';
+    container.innerHTML = '<div class="no-attachments">Anhänge können direkt hinzugefügt werden (automatisches Speichern beim ersten Anhang).</div>';
     return;
   }
 
@@ -268,6 +268,36 @@ function renderResults(rows) {
       $('#detailTitle').focus();
     }
 
+    async function persistNewQuoteFromDetailForm() {
+      const titel = $('#detailTitle').value.trim();
+      const quelle = $('#detailSource').value.trim();
+      const zitat = $('#detailText').value.trim();
+      const genutzt = $('#detailUsed').value.trim();
+
+      if (!titel || !quelle || !zitat) {
+        alert('Für das automatische Speichern sind Titel, Quelle und Zitat erforderlich.');
+        return null;
+      }
+
+      const newId = await insertQuote(titel, quelle, zitat, genutzt);
+      if (!newId) {
+        throw new Error('Neue Zitat-ID konnte nicht ermittelt werden.');
+      }
+
+      $('#detailId').value = String(newId);
+      $('#detailTitleDisplay').innerHTML = formatHighlightedHtml(titel);
+      $('#detailSourceDisplay').innerHTML = formatHighlightedHtml(quelle);
+      $('#detailTextDisplay').innerHTML = formatHighlightedHtml(zitat);
+      $('#detailUsedDisplay').innerHTML = formatHighlightedHtml(genutzt);
+
+      document.querySelector('.export-check').style.display = 'block';
+      $('#deleteDetailBtn').style.display = 'block';
+      $('#detailExportCb').checked = false;
+      renderAttachments(newId);
+
+      return newId;
+    }
+
     // ---- Event bindings ----
     window.addEventListener('DOMContentLoaded', () => {
       if (typeof updateStorageButtons === 'function') {
@@ -327,17 +357,8 @@ function renderResults(rows) {
         
         if (!detailId) {
           // New quote - add it via database
-          const titel = $('#detailTitle').value.trim();
-          const quelle = $('#detailSource').value.trim();
-          const zitat = $('#detailText').value.trim();
-          const genutzt = $('#detailUsed').value.trim();
-          
-          if (!titel || !quelle || !zitat) {
-            alert("Titel, Quelle und Zitat sind erforderlich.");
-            return;
-          }
-          
-          await insertQuote(titel, quelle, zitat, genutzt);
+          const newId = await persistNewQuoteFromDetailForm();
+          if (!newId) return;
         } else {
           // Existing quote - update it
           const id = parseInt(detailId, 10);
@@ -388,10 +409,14 @@ function renderResults(rows) {
         $('#attachmentFileInput').click();
       });
       $('#attachmentFileInput').addEventListener('change', async (e) => {
-        const detailId = $('#detailId').value;
+        let detailId = $('#detailId').value;
         if (!detailId) {
-          alert('Bitte speichern Sie zuerst das Zitat, um Anhänge hinzuzufügen.');
-          return;
+          const newId = await persistNewQuoteFromDetailForm();
+          if (!newId) {
+            e.target.value = '';
+            return;
+          }
+          detailId = String(newId);
         }
         const quoteRowid = parseInt(detailId, 10);
         const files = e.target.files;

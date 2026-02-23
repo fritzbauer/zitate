@@ -115,8 +115,15 @@ async function insertQuote(titel, quelle, zitat, genutzt) {
      VALUES (?, ?, ?, ?, NULL)`,
     [titel, quelle, zitat, genutzt]
   );
+  const idStmt = db.prepare('SELECT last_insert_rowid() AS id');
+  let newId = null;
+  if (idStmt.step()) {
+    newId = Number(idStmt.getAsObject().id) || null;
+  }
+  idStmt.free();
   runMaintenanceIfNeeded();
   await saveAfterMutation();
+  return newId;
 }
 
 // ---- Attachments CRUD ----

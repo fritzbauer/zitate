@@ -31,7 +31,7 @@
     },
     {
       "path": "technical/database.js",
-      "hash": "1709705a278438f01e14f474caeea51a1b1f8c39baf76c7d65ed8768c6c8bc7e"
+      "hash": "188881268248d84663f7e2efed86859fd9bf4fb2776614c5d816d42a955a6603"
     },
     {
       "path": "technical/search_logic.js",
@@ -51,11 +51,11 @@
     },
     {
       "path": "technical/styles.css",
-      "hash": "101416c6b36f2a0d2b41d6919900a3337aaabfb3ab7169d48bcb9991488f337b"
+      "hash": "c9847929379b0d32765e1e6f4e33bcbe91703ba52ac5474c1ea9d59c137aa5ef"
     },
     {
       "path": "technical/ui.js",
-      "hash": "aece290c6868d5c48cc424723510bd8b0b1ec29e12884f9ee1ddcef83a3c7482"
+      "hash": "9e7968fe9839e27b422a0a9f533a8f3f4fb938ad36841d190c47d1d0d7704ef4"
     },
     {
       "path": "technical/icons/icon-72.png",
