@@ -60,15 +60,22 @@ async function loadManifestFromServer() {
 }
 
 async function cacheFiles(cache, files) {
+  const failedFiles = [];
   await Promise.all(
     files.map(async file => {
       const request = new Request(file, { cache: 'no-cache' });
       const response = await fetch(request);
       if (response.ok) {
         await cache.put(request, response.clone());
+      } else {
+        failedFiles.push(file);
       }
     })
   );
+
+  if (failedFiles.length) {
+    throw new Error(`Could not cache files: ${failedFiles.join(', ')}`);
+  }
 }
 
 async function syncCacheWithManifest(force = false) {
@@ -134,7 +141,9 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') {
     return;
   }
-  event.waitUntil(syncCacheWithManifest(false));
+  if (event.request.mode === 'navigate') {
+    event.waitUntil(syncCacheWithManifest(false));
+  }
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
