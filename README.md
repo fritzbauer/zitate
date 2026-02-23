@@ -37,6 +37,7 @@ technical/
   sql-wasm.js           Custom sql.js build with FTS5 + Snowball stemming
   icons/                PWA icons
 service-worker.js       Service worker for offline PWA caching
+cache-manifest.json     Liste der offline gecachten Dateien inkl. Version für Updates
 manifest.json           PWA manifest
 ```
 
