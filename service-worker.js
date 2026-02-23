@@ -60,22 +60,35 @@ async function loadManifestFromServer() {
 }
 
 async function cacheFiles(cache, files) {
-  const failedFiles = [];
-  await Promise.all(
+  const fetchResults = await Promise.all(
     files.map(async file => {
-      const request = new Request(file, { cache: 'no-cache' });
-      const response = await fetch(request);
-      if (response.ok) {
-        await cache.put(request, response.clone());
-      } else {
-        failedFiles.push(file);
+      try {
+        const request = new Request(file, { cache: 'no-cache' });
+        const response = await fetch(request);
+        if (!response.ok) {
+          return { file, error: `HTTP ${response.status}` };
+        }
+        return { file, request, response };
+      } catch (error) {
+        return { file, error: String(error) };
       }
     })
   );
 
+  const failedFiles = fetchResults.filter(result => result.error).map(result => result.file);
   if (failedFiles.length) {
     throw new Error(`Could not cache files: ${failedFiles.join(', ')}`);
   }
+
+  await Promise.all(
+    fetchResults.map(result => cache.put(result.request, result.response.clone()))
+  );
+}
+
+function hasSameFiles(firstFiles, secondFiles) {
+  if (firstFiles.length !== secondFiles.length) return false;
+  const secondFileSet = new Set(secondFiles);
+  return firstFiles.every(file => secondFileSet.has(file));
 }
 
 async function syncCacheWithManifest(force = false) {
@@ -93,7 +106,7 @@ async function syncCacheWithManifest(force = false) {
     const hasChanged =
       !previousManifest ||
       previousManifest.version !== nextManifest.version ||
-      JSON.stringify(previousManifest.files) !== JSON.stringify(nextManifest.files);
+      !hasSameFiles(previousManifest.files, nextManifest.files);
 
     if (!hasChanged) return;
 
